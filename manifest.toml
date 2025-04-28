@@ -1,0 +1,28 @@
+name = "anthropic-proxy"
+version = "0.1.0"
+description = "A proxy actor for interacting with the Anthropic API"
+component_path = ""
+
+[interface]
+implements = "ntwk:theater/single-actor"
+requires = []
+
+[[handlers]]
+type = "runtime"
+config = {}
+
+[[handlers]]
+type = "store"
+config = {}
+
+[[handlers]]
+type = "http-client"
+config = {}
+
+[[handlers]]
+type = "message-server-client"
+config = {}
+
+[[handlers]]
+type = "http-framework"
+config = {}
