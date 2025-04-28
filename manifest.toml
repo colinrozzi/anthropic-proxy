@@ -1,24 +1,19 @@
 name = "anthropic-proxy"
-version = "0.1.0"
-description = "A proxy actor for interacting with the Anthropic API"
-component_path = ""
-
-[interface]
-implements = "ntwk:theater/single-actor"
-requires = []
+component_path = "/nix/store/h3nswjw2i33nm5jhg9c53a43xknngsmb-anthropic-proxy-0.1.0/lib/anthropic-proxy.wasm"
+short_description = "A proxy actor for interacting with the Anthropic API"
+init_state = "/Users/colinrozzi/work/actor-registry/init.json"
 
 [[handlers]]
 type = "runtime"
-config = {}
+
+[handlers.config]
 
 [[handlers]]
 type = "store"
-config = {}
+
+[handlers.config]
 
 [[handlers]]
 type = "http-client"
-config = {}
 
-[[handlers]]
-type = "message-server-client"
-config = {}
+[handlers.config]
