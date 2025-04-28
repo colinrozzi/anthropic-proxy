@@ -22,7 +22,3 @@ config = {}
 [[handlers]]
 type = "message-server-client"
 config = {}
-
-[[handlers]]
-type = "http-framework"
-config = {}

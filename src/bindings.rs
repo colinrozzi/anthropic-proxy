@@ -367,6 +367,295 @@ pub mod ntwk {
                 }
             }
         }
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod http_types {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            /// Raw binary data type
+            pub type Bytes = _rt::Vec<u8>;
+            #[derive(Clone)]
+            pub struct HttpRequest {
+                /// HTTP method (GET, POST, PUT, DELETE, etc.)
+                pub method: _rt::String,
+                /// Full request URI including query parameters
+                pub uri: _rt::String,
+                /// List of request headers as key-value pairs
+                pub headers: _rt::Vec<(_rt::String, _rt::String)>,
+                /// Optional request body as binary data
+                pub body: Option<Bytes>,
+            }
+            impl ::core::fmt::Debug for HttpRequest {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("HttpRequest")
+                        .field("method", &self.method)
+                        .field("uri", &self.uri)
+                        .field("headers", &self.headers)
+                        .field("body", &self.body)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
+            pub struct HttpResponse {
+                /// HTTP status code (e.g., 200, 404, 500)
+                pub status: u16,
+                /// List of response headers as key-value pairs
+                pub headers: _rt::Vec<(_rt::String, _rt::String)>,
+                /// Optional response body as binary data
+                pub body: Option<Bytes>,
+            }
+            impl ::core::fmt::Debug for HttpResponse {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("HttpResponse")
+                        .field("status", &self.status)
+                        .field("headers", &self.headers)
+                        .field("body", &self.body)
+                        .finish()
+                }
+            }
+        }
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod http_client {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            pub type HttpRequest = super::super::super::ntwk::theater::http_types::HttpRequest;
+            pub type HttpResponse = super::super::super::ntwk::theater::http_types::HttpResponse;
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn send_http(req: &HttpRequest) -> Result<HttpResponse, _rt::String> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 7 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 7
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let super::super::super::ntwk::theater::http_types::HttpRequest {
+                        method: method0,
+                        uri: uri0,
+                        headers: headers0,
+                        body: body0,
+                    } = req;
+                    let vec1 = method0;
+                    let ptr1 = vec1.as_ptr().cast::<u8>();
+                    let len1 = vec1.len();
+                    let vec2 = uri0;
+                    let ptr2 = vec2.as_ptr().cast::<u8>();
+                    let len2 = vec2.len();
+                    let vec6 = headers0;
+                    let len6 = vec6.len();
+                    let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
+                        vec6.len() * (4 * ::core::mem::size_of::<*const u8>()),
+                        ::core::mem::size_of::<*const u8>(),
+                    );
+                    let result6 = if layout6.size() != 0 {
+                        let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
+                        if ptr.is_null() {
+                            _rt::alloc::handle_alloc_error(layout6);
+                        }
+                        ptr
+                    } else {
+                        ::core::ptr::null_mut()
+                    };
+                    for (i, e) in vec6.into_iter().enumerate() {
+                        let base = result6
+                            .add(i * (4 * ::core::mem::size_of::<*const u8>()));
+                        {
+                            let (t3_0, t3_1) = e;
+                            let vec4 = t3_0;
+                            let ptr4 = vec4.as_ptr().cast::<u8>();
+                            let len4 = vec4.len();
+                            *base
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len4;
+                            *base.add(0).cast::<*mut u8>() = ptr4.cast_mut();
+                            let vec5 = t3_1;
+                            let ptr5 = vec5.as_ptr().cast::<u8>();
+                            let len5 = vec5.len();
+                            *base
+                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len5;
+                            *base
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr5.cast_mut();
+                        }
+                    }
+                    let (result8_0, result8_1, result8_2) = match body0 {
+                        Some(e) => {
+                            let vec7 = e;
+                            let ptr7 = vec7.as_ptr().cast::<u8>();
+                            let len7 = vec7.len();
+                            (1i32, ptr7.cast_mut(), len7)
+                        }
+                        None => (0i32, ::core::ptr::null_mut(), 0usize),
+                    };
+                    let ptr9 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "ntwk:theater/http-client")]
+                    unsafe extern "C" {
+                        #[link_name = "send-http"]
+                        fn wit_import10(
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: i32,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        );
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import10(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: i32,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    unsafe {
+                        wit_import10(
+                            ptr1.cast_mut(),
+                            len1,
+                            ptr2.cast_mut(),
+                            len2,
+                            result6,
+                            len6,
+                            result8_0,
+                            result8_1,
+                            result8_2,
+                            ptr9,
+                        )
+                    };
+                    let l11 = i32::from(*ptr9.add(0).cast::<u8>());
+                    let result29 = match l11 {
+                        0 => {
+                            let e = {
+                                let l12 = i32::from(
+                                    *ptr9.add(::core::mem::size_of::<*const u8>()).cast::<u16>(),
+                                );
+                                let l13 = *ptr9
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l14 = *ptr9
+                                    .add(3 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let base21 = l13;
+                                let len21 = l14;
+                                let mut result21 = _rt::Vec::with_capacity(len21);
+                                for i in 0..len21 {
+                                    let base = base21
+                                        .add(i * (4 * ::core::mem::size_of::<*const u8>()));
+                                    let e21 = {
+                                        let l15 = *base.add(0).cast::<*mut u8>();
+                                        let l16 = *base
+                                            .add(::core::mem::size_of::<*const u8>())
+                                            .cast::<usize>();
+                                        let len17 = l16;
+                                        let bytes17 = _rt::Vec::from_raw_parts(
+                                            l15.cast(),
+                                            len17,
+                                            len17,
+                                        );
+                                        let l18 = *base
+                                            .add(2 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<*mut u8>();
+                                        let l19 = *base
+                                            .add(3 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<usize>();
+                                        let len20 = l19;
+                                        let bytes20 = _rt::Vec::from_raw_parts(
+                                            l18.cast(),
+                                            len20,
+                                            len20,
+                                        );
+                                        (_rt::string_lift(bytes17), _rt::string_lift(bytes20))
+                                    };
+                                    result21.push(e21);
+                                }
+                                _rt::cabi_dealloc(
+                                    base21,
+                                    len21 * (4 * ::core::mem::size_of::<*const u8>()),
+                                    ::core::mem::size_of::<*const u8>(),
+                                );
+                                let l22 = i32::from(
+                                    *ptr9
+                                        .add(4 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<u8>(),
+                                );
+                                super::super::super::ntwk::theater::http_types::HttpResponse {
+                                    status: l12 as u16,
+                                    headers: result21,
+                                    body: match l22 {
+                                        0 => None,
+                                        1 => {
+                                            let e = {
+                                                let l23 = *ptr9
+                                                    .add(5 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l24 = *ptr9
+                                                    .add(6 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len25 = l24;
+                                                _rt::Vec::from_raw_parts(l23.cast(), len25, len25)
+                                            };
+                                            Some(e)
+                                        }
+                                        _ => _rt::invalid_enum_discriminant(),
+                                    },
+                                }
+                            };
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l26 = *ptr9
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l27 = *ptr9
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len28 = l27;
+                                let bytes28 = _rt::Vec::from_raw_parts(
+                                    l26.cast(),
+                                    len28,
+                                    len28,
+                                );
+                                _rt::string_lift(bytes28)
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    if layout6.size() != 0 {
+                        _rt::alloc::dealloc(result6.cast(), layout6);
+                    }
+                    result29
+                }
+            }
+        }
     }
 }
 #[rustfmt::skip]
@@ -1598,12 +1887,12 @@ mod _rt {
         let layout = alloc::Layout::from_size_align_unchecked(size, align);
         alloc::dealloc(ptr, layout);
     }
+    pub use alloc_crate::alloc;
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
     }
     extern crate alloc as alloc_crate;
-    pub use alloc_crate::alloc;
 }
 /// Generates `#[unsafe(no_mangle)]` functions to export the specified type as
 /// the root implementation of all generated traits.
@@ -1644,9 +1933,9 @@ pub(crate) use __export_anthropic_proxy_impl as export;
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1334] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xb0\x09\x01A\x02\x01\
-A\x0f\x01B\x19\x01p}\x04\0\x04json\x03\0\0\x01p}\x01k\x02\x04\0\x05state\x03\0\x03\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1863] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xc1\x0d\x01A\x02\x01\
+A\x15\x01B\x19\x01p}\x04\0\x04json\x03\0\0\x01p}\x01k\x02\x04\0\x05state\x03\0\x03\
 \x01s\x04\0\x08actor-id\x03\0\x05\x01s\x04\0\x0achannel-id\x03\0\x07\x01k\x01\x01\
 r\x02\x08accepted\x7f\x07message\x09\x04\0\x0echannel-accept\x03\0\x0a\x01kw\x01\
 r\x03\x0aevent-types\x06parent\x0c\x04data\x01\x04\0\x05event\x03\0\x0d\x01r\x02\
@@ -1660,23 +1949,35 @@ error\0\0\x16update-component-error\x01s\0\x06paused\0\0\x04\0\x0bactor-error\x0
 n\x02\x03\0\0\x08actor-id\x01B\x0a\x02\x03\x02\x01\x01\x04\0\x04json\x03\0\0\x02\
 \x03\x02\x01\x02\x04\0\x05chain\x03\0\x02\x02\x03\x02\x01\x03\x04\0\x08actor-id\x03\
 \0\x04\x01@\x01\x03msgs\x01\0\x04\0\x03log\x01\x06\x01@\0\0\x03\x04\0\x09get-cha\
-in\x01\x07\x03\0\x14ntwk:theater/runtime\x05\x04\x02\x03\0\0\x05event\x02\x03\0\0\
-\x0achannel-id\x02\x03\0\0\x0echannel-accept\x01B\x1e\x02\x03\x02\x01\x01\x04\0\x04\
-json\x03\0\0\x02\x03\x02\x01\x05\x04\0\x05event\x03\0\x02\x02\x03\x02\x01\x06\x04\
-\0\x0achannel-id\x03\0\x04\x02\x03\x02\x01\x07\x04\0\x0echannel-accept\x03\0\x06\
-\x01k\x01\x01o\x01\x01\x01o\x01\x08\x01j\x01\x0a\x01s\x01@\x02\x05state\x08\x06p\
-arams\x09\0\x0b\x04\0\x0bhandle-send\x01\x0c\x01o\x02s\x01\x01o\x02\x08\x0a\x01j\
-\x01\x0e\x01s\x01@\x02\x05state\x08\x06params\x0d\0\x0f\x04\0\x0ehandle-request\x01\
-\x10\x01o\x01\x07\x01o\x02\x08\x11\x01j\x01\x12\x01s\x01@\x02\x05state\x08\x06pa\
-rams\x09\0\x13\x04\0\x13handle-channel-open\x01\x14\x01o\x02\x05\x01\x01@\x02\x05\
-state\x08\x06params\x15\0\x0b\x04\0\x16handle-channel-message\x01\x16\x01o\x01\x05\
-\x01@\x02\x05state\x08\x06params\x17\0\x0b\x04\0\x14handle-channel-close\x01\x18\
-\x04\0\"ntwk:theater/message-server-client\x05\x08\x02\x03\0\0\x05state\x01B\x07\
-\x02\x03\x02\x01\x09\x04\0\x05state\x03\0\0\x01o\x01s\x01o\x01\x01\x01j\x01\x03\x01\
-s\x01@\x02\x05state\x01\x06params\x02\0\x04\x04\0\x04init\x01\x05\x04\0\x12ntwk:\
-theater/actor\x05\x0a\x04\0\x1cntwk:theater/anthropic-proxy\x04\0\x0b\x15\x01\0\x0f\
-anthropic-proxy\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\
-\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+in\x01\x07\x03\0\x14ntwk:theater/runtime\x05\x04\x01B\x14\x01p}\x04\0\x05bytes\x03\
+\0\0\x01o\x02ss\x01p\x02\x01k\x01\x01r\x04\x06methods\x03uris\x07headers\x03\x04\
+body\x04\x04\0\x0chttp-request\x03\0\x05\x01r\x03\x06status{\x07headers\x03\x04b\
+ody\x04\x04\0\x0dhttp-response\x03\0\x07\x01r\x02\x09cert-paths\x08key-paths\x04\
+\0\x0atls-config\x03\0\x09\x01k{\x01ks\x01k\x0a\x01r\x03\x04port\x0b\x04host\x0c\
+\x0atls-config\x0d\x04\0\x0dserver-config\x03\0\x0e\x01r\x07\x02idw\x04port{\x04\
+hosts\x07running\x7f\x0croutes-county\x10middleware-county\x11websocket-enabled\x7f\
+\x04\0\x0bserver-info\x03\0\x10\x01r\x02\x07proceed\x7f\x07request\x06\x04\0\x11\
+middleware-result\x03\0\x12\x03\0\x17ntwk:theater/http-types\x05\x05\x02\x03\0\x02\
+\x0chttp-request\x02\x03\0\x02\x0dhttp-response\x01B\x07\x02\x03\x02\x01\x06\x04\
+\0\x0chttp-request\x03\0\0\x02\x03\x02\x01\x07\x04\0\x0dhttp-response\x03\0\x02\x01\
+j\x01\x03\x01s\x01@\x01\x03req\x01\0\x04\x04\0\x09send-http\x01\x05\x03\0\x18ntw\
+k:theater/http-client\x05\x08\x02\x03\0\0\x05event\x02\x03\0\0\x0achannel-id\x02\
+\x03\0\0\x0echannel-accept\x01B\x1e\x02\x03\x02\x01\x01\x04\0\x04json\x03\0\0\x02\
+\x03\x02\x01\x09\x04\0\x05event\x03\0\x02\x02\x03\x02\x01\x0a\x04\0\x0achannel-i\
+d\x03\0\x04\x02\x03\x02\x01\x0b\x04\0\x0echannel-accept\x03\0\x06\x01k\x01\x01o\x01\
+\x01\x01o\x01\x08\x01j\x01\x0a\x01s\x01@\x02\x05state\x08\x06params\x09\0\x0b\x04\
+\0\x0bhandle-send\x01\x0c\x01o\x02s\x01\x01o\x02\x08\x0a\x01j\x01\x0e\x01s\x01@\x02\
+\x05state\x08\x06params\x0d\0\x0f\x04\0\x0ehandle-request\x01\x10\x01o\x01\x07\x01\
+o\x02\x08\x11\x01j\x01\x12\x01s\x01@\x02\x05state\x08\x06params\x09\0\x13\x04\0\x13\
+handle-channel-open\x01\x14\x01o\x02\x05\x01\x01@\x02\x05state\x08\x06params\x15\
+\0\x0b\x04\0\x16handle-channel-message\x01\x16\x01o\x01\x05\x01@\x02\x05state\x08\
+\x06params\x17\0\x0b\x04\0\x14handle-channel-close\x01\x18\x04\0\"ntwk:theater/m\
+essage-server-client\x05\x0c\x02\x03\0\0\x05state\x01B\x07\x02\x03\x02\x01\x0d\x04\
+\0\x05state\x03\0\0\x01o\x01s\x01o\x01\x01\x01j\x01\x03\x01s\x01@\x02\x05state\x01\
+\x06params\x02\0\x04\x04\0\x04init\x01\x05\x04\0\x12ntwk:theater/actor\x05\x0e\x04\
+\0\x1cntwk:theater/anthropic-proxy\x04\0\x0b\x15\x01\0\x0fanthropic-proxy\x03\0\0\
+\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bind\
+gen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

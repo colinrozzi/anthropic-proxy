@@ -14,13 +14,13 @@ use std::fmt;
 pub enum AnthropicError {
     /// HTTP request failed
     HttpError(String),
-    
+
     /// Failed to serialize/deserialize JSON
     JsonError(String),
-    
+
     /// API returned an error
     ApiError { status: u16, message: String },
-    
+
     /// Unexpected response format
     InvalidResponse(String),
 }
@@ -50,10 +50,10 @@ impl From<serde_json::Error> for AnthropicError {
 pub struct AnthropicClient {
     /// Anthropic API key
     api_key: String,
-    
+
     /// Base URL for the API
     base_url: String,
-    
+
     /// API version to use
     api_version: String,
 }
@@ -71,7 +71,7 @@ impl AnthropicClient {
     /// List available models from the Anthropic API
     pub fn list_models(&self) -> Result<Vec<ModelInfo>, AnthropicError> {
         log("Listing available Anthropic models");
-        
+
         let request = HttpRequest {
             method: "GET".to_string(),
             uri: format!("{}/models", self.base_url),
@@ -93,22 +93,20 @@ impl AnthropicClient {
         if response.status != 200 {
             return Err(AnthropicError::ApiError {
                 status: response.status,
-                message: String::from_utf8_lossy(
-                    &response.body.unwrap_or_default()
-                ).to_string(),
+                message: String::from_utf8_lossy(&response.body.unwrap_or_default()).to_string(),
             });
         }
 
         // Parse the response
-        let body = response.body.ok_or_else(|| 
-            AnthropicError::InvalidResponse("No response body".to_string())
-        )?;
-        
+        let body = response
+            .body
+            .ok_or_else(|| AnthropicError::InvalidResponse("No response body".to_string()))?;
+
         let response_data: Value = serde_json::from_slice(&body)?;
-        
+
         // Extract the models
         let mut models = Vec::new();
-        
+
         if let Some(data) = response_data.get("data").and_then(|d| d.as_array()) {
             for model_data in data {
                 if let (Some(id), Some(name)) = (
@@ -118,7 +116,7 @@ impl AnthropicClient {
                     // Get max tokens based on model ID
                     let max_tokens = self.get_model_max_tokens(id);
                     let pricing = self.get_model_pricing(id);
-                    
+
                     models.push(ModelInfo {
                         id: id.to_string(),
                         display_name: name.to_string(),
@@ -129,7 +127,7 @@ impl AnthropicClient {
                 }
             }
         }
-        
+
         Ok(models)
     }
 
@@ -139,40 +137,38 @@ impl AnthropicClient {
         request: CompletionRequest,
     ) -> Result<CompletionResponse, AnthropicError> {
         log("Generating completion with Anthropic API");
-        
+
         // Build the request body
         let mut request_body = json!({
             "model": request.model,
             "messages": request.messages,
             "max_tokens": request.max_tokens.unwrap_or(4096),
         });
-        
+
         // Add optional parameters
         if let Some(temp) = request.temperature {
             request_body["temperature"] = json!(temp);
         }
-        
+
         if let Some(system) = request.system {
             request_body["system"] = json!(system);
         }
-        
+
         if let Some(top_p) = request.top_p {
             request_body["top_p"] = json!(top_p);
         }
-        
-        if let Some(stream) = request.stream {
-            request_body["stream"] = json!(stream);
-        }
-        
+
         // Add any additional parameters
         if let Some(additional) = request.additional_params {
             for (key, value) in additional {
                 request_body[key] = value;
             }
         }
-        
-        let api_version = request.anthropic_version.unwrap_or_else(|| self.api_version.clone());
-        
+
+        let api_version = request
+            .anthropic_version
+            .unwrap_or_else(|| self.api_version.clone());
+
         // Create the HTTP request
         let http_request = HttpRequest {
             method: "POST".to_string(),
@@ -195,21 +191,19 @@ impl AnthropicClient {
         if response.status != 200 {
             return Err(AnthropicError::ApiError {
                 status: response.status,
-                message: String::from_utf8_lossy(
-                    &response.body.unwrap_or_default()
-                ).to_string(),
+                message: String::from_utf8_lossy(&response.body.unwrap_or_default()).to_string(),
             });
         }
 
         // Parse the response
-        let body = response.body.ok_or_else(|| 
-            AnthropicError::InvalidResponse("No response body".to_string())
-        )?;
-        
+        let body = response
+            .body
+            .ok_or_else(|| AnthropicError::InvalidResponse("No response body".to_string()))?;
+
         log(&format!("Got response: {}", String::from_utf8_lossy(&body)));
-        
+
         let response_data: Value = serde_json::from_slice(&body)?;
-        
+
         // Extract required fields
         let content = response_data["content"][0]["text"]
             .as_str()
@@ -242,7 +236,7 @@ impl AnthropicClient {
             .as_u64()
             .ok_or_else(|| AnthropicError::InvalidResponse("No input tokens".to_string()))?
             as u32;
-            
+
         let output_tokens = response_data["usage"]["output_tokens"]
             .as_u64()
             .ok_or_else(|| AnthropicError::InvalidResponse("No output tokens".to_string()))?
@@ -268,18 +262,20 @@ impl AnthropicClient {
         match model_id {
             // Claude 3.7 models
             "claude-3-7-sonnet-20250219" => 200000,
-            
+
             // Claude 3.5 models
-            "claude-3-5-sonnet-20241022" | "claude-3-5-haiku-20241022" | "claude-3-5-sonnet-20240620" => 200000,
-            
+            "claude-3-5-sonnet-20241022"
+            | "claude-3-5-haiku-20241022"
+            | "claude-3-5-sonnet-20240620" => 200000,
+
             // Claude 3 models
             "claude-3-opus-20240229" => 200000,
             "claude-3-sonnet-20240229" => 200000,
             "claude-3-haiku-20240307" => 200000,
-            
+
             // Claude 2 models
             "claude-2.1" | "claude-2.0" => 100000,
-            
+
             // Default case
             _ => 100000, // Conservative default
         }
@@ -293,7 +289,7 @@ impl AnthropicClient {
                 input_cost_per_million_tokens: 3.00,
                 output_cost_per_million_tokens: 15.00,
             },
-            
+
             // Claude 3.5 models
             "claude-3-5-sonnet-20241022" | "claude-3-5-sonnet-20240620" => ModelPricing {
                 input_cost_per_million_tokens: 3.00,
@@ -303,7 +299,7 @@ impl AnthropicClient {
                 input_cost_per_million_tokens: 0.80,
                 output_cost_per_million_tokens: 4.00,
             },
-            
+
             // Claude 3 models
             "claude-3-opus-20240229" => ModelPricing {
                 input_cost_per_million_tokens: 15.00,
@@ -317,7 +313,7 @@ impl AnthropicClient {
                 input_cost_per_million_tokens: 3.00,
                 output_cost_per_million_tokens: 15.00,
             },
-            
+
             // Default for older or unknown models
             _ => ModelPricing {
                 input_cost_per_million_tokens: 8.00,

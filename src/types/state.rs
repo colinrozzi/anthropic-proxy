@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Configuration options for the Anthropic API proxy
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -12,9 +11,6 @@ pub struct Config {
     
     /// Request timeout in milliseconds
     pub timeout_ms: u32,
-    
-    /// Whether to enable streaming responses by default
-    pub enable_streaming: bool,
 }
 
 impl Default for Config {
@@ -23,7 +19,6 @@ impl Default for Config {
             default_model: "claude-3-7-sonnet-20250219".to_string(),
             max_cache_size: Some(100),
             timeout_ms: 30000,  // 30 seconds
-            enable_streaming: false,
         }
     }
 }
@@ -42,12 +37,6 @@ pub struct State {
     
     /// Store ID (if using runtime store)
     pub store_id: Option<String>,
-    
-    /// Active connections (for WebSocket support)
-    pub active_connections: HashMap<String, bool>,
-    
-    /// HTTP server ID
-    pub server_id: Option<u64>,
 }
 
 impl State {
@@ -56,15 +45,12 @@ impl State {
         api_key: String,
         store_id: Option<String>,
         config: Option<Config>,
-        server_id: Option<u64>,
     ) -> Self {
         Self {
             id,
             api_key,
             config: config.unwrap_or_default(),
             store_id,
-            active_connections: HashMap::new(),
-            server_id,
         }
     }
 }
