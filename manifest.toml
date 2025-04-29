@@ -1,7 +1,7 @@
 name = "anthropic-proxy"
-component_path = "/nix/store/gf49ixka5d0dcxkyii70rjnkq56cac4d-anthropic-proxy-0.1.0/lib/anthropic-proxy.wasm"
+component_path = "/nix/store/pyxw4iqw2pss0v175d9bmyslw4sif0q2-anthropic-proxy-0.1.0/lib/anthropic-proxy.wasm"
 short_description = "A proxy actor for interacting with the Anthropic API"
-init_state = "/Users/colinrozzi/work/actor-registry/init.json"
+init_state = "/Users/colinrozzi/work/actor-registry/anthropic-proxy/init.json"
 
 [[handlers]]
 type = "runtime"
