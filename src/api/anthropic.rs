@@ -101,6 +101,8 @@ impl AnthropicClient {
         let body = response
             .body
             .ok_or_else(|| AnthropicError::InvalidResponse("No response body".to_string()))?;
+        
+        log(&format!("Models API response: {}", String::from_utf8_lossy(&body)));
 
         let response_data: Value = serde_json::from_slice(&body)?;
 
@@ -111,7 +113,7 @@ impl AnthropicClient {
             for model_data in data {
                 if let (Some(id), Some(name)) = (
                     model_data.get("id").and_then(|v| v.as_str()),
-                    model_data.get("name").and_then(|v| v.as_str()),
+                    model_data.get("display_name").and_then(|v| v.as_str()),
                 ) {
                     // Get max tokens based on model ID
                     let max_tokens = self.get_model_max_tokens(id);
