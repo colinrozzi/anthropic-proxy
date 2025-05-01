@@ -2,17 +2,13 @@ mod api;
 mod bindings;
 mod handlers;
 mod types;
-// Tools module removed, now using anthropic-types
 
-use crate::api::AnthropicClient;
 use crate::bindings::exports::ntwk::theater::actor::Guest;
 use crate::bindings::exports::ntwk::theater::message_server_client::Guest as MessageServerClient;
 use crate::bindings::ntwk::theater::runtime::log;
 use crate::types::state::{Config, State};
-use anthropic_types;
 
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct InitData {
