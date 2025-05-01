@@ -1,3 +1,5 @@
 pub mod anthropic;
+mod anthropic_client;
 
-pub use anthropic::{AnthropicClient, AnthropicError};
+// Export the new client that uses shared types
+pub use anthropic_client::AnthropicClient;

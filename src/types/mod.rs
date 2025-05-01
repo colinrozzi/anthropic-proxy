@@ -1,6 +1,7 @@
 pub mod state;
-pub mod messages;
 
 pub use state::{Config, State};
-// Import tools from the root module
-pub use crate::tools::{ToolDefinition, ToolChoice};
+// Re-export types from anthropic-types
+pub use anthropic_types::{AnthropicRequest, AnthropicResponse, CompletionRequest, 
+    CompletionResponse, Message, MessageContent, OperationType, ResponseStatus, 
+    Usage, ModelInfo, ModelPricing, ToolDefinition, ToolChoice, ToolParameters};

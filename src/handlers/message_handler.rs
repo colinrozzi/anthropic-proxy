@@ -1,13 +1,13 @@
 use crate::api::AnthropicClient;
 use crate::bindings::ntwk::theater::runtime::log;
-use anthropic_types::{
-    AnthropicRequest, AnthropicResponse, CompletionRequest, OperationType, ResponseStatus
-};
 use crate::types::state::State;
-// No need to import local tools, using anthropic-types
 
-use serde_json::{json, Value};
-use std::error::Error;
+// Use shared types from anthropic-types
+use anthropic_types::{
+    AnthropicRequest, AnthropicResponse, OperationType, ResponseStatus, ModelInfo
+};
+
+use serde_json::Value;
 
 pub fn handle_request(
     data: Vec<u8>,
@@ -24,7 +24,7 @@ pub fn handle_request(
         }
     };
     
-    // Parse the request
+    // Parse the request using the shared AnthropicRequest type
     let request: AnthropicRequest = match serde_json::from_slice(&data) {
         Ok(req) => req,
         Err(e) => {

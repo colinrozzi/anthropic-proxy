@@ -2,7 +2,7 @@ mod api;
 mod bindings;
 mod handlers;
 mod types;
-mod tools;
+// Tools module removed, now using anthropic-types
 
 use anthropic_types;
 use crate::api::AnthropicClient;
