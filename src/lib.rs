@@ -2,6 +2,7 @@ mod api;
 mod bindings;
 mod handlers;
 mod types;
+mod tools;
 
 use crate::api::AnthropicClient;
 use crate::bindings::exports::ntwk::theater::actor::Guest;

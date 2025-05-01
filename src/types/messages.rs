@@ -1,5 +1,28 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use crate::types::tools::{ToolDefinition, ToolChoice};
+
+/// Different types of content that can be in a message
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "type")]
+pub enum MessageContent {
+    #[serde(rename = "text")]
+    Text { text: String },
+    
+    #[serde(rename = "tool_use")]
+    ToolUse {
+        id: String,
+        name: String,
+        input: serde_json::Value,
+    },
+    
+    #[serde(rename = "tool_result")]
+    ToolResult {
+        tool_use_id: String,
+        content: serde_json::Value,
+        is_error: Option<bool>,
+    },
+}
 
 /// A single message in a conversation with Claude
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -7,8 +30,13 @@ pub struct Message {
     /// Role of the message sender (user, assistant, system)
     pub role: String,
     
-    /// Content of the message
-    pub content: String,
+    /// Content of the message as vector of MessageContent objects
+    #[serde(default)]
+    pub content: Vec<MessageContent>,
+    
+    /// For backward compatibility, support simple string content
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content_str: Option<String>,
 }
 
 /// Request to generate a completion from Claude
@@ -35,6 +63,15 @@ pub struct CompletionRequest {
     /// Anthropic API version to use
     pub anthropic_version: Option<String>,
     
+    /// Tools to make available to Claude
+    pub tools: Option<Vec<ToolDefinition>>,
+    
+    /// Tool choice configuration
+    pub tool_choice: Option<ToolChoice>,
+    
+    /// Whether to disable parallel tool use
+    pub disable_parallel_tool_use: Option<bool>,
+    
     /// Additional parameters for the API
     pub additional_params: Option<HashMap<String, serde_json::Value>>,
 }
@@ -52,8 +89,8 @@ pub struct Usage {
 /// Response from a completion request
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CompletionResponse {
-    /// Generated content
-    pub content: String,
+    /// Generated content blocks
+    pub content_blocks: Vec<MessageContent>,
     
     /// ID of the message
     pub id: String,
@@ -64,14 +101,18 @@ pub struct CompletionResponse {
     /// Reason why generation stopped
     pub stop_reason: String,
     
-    /// Stop sequence if applicable
+    /// Stop sequence if applicable (deprecated - kept for backward compatibility)
     pub stop_sequence: Option<String>,
     
-    /// Type of message
-    pub message_type: String,
+    /// Type of message (deprecated - kept for backward compatibility)
+    pub message_type: Option<String>,
     
     /// Token usage information
     pub usage: Usage,
+    
+    /// Original content string for backward compatibility
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
 }
 
 /// Information about a model
@@ -111,6 +152,9 @@ pub enum OperationType {
     
     /// List available models
     ListModels,
+    
+    /// Execute a tool
+    ExecuteTool,
 }
 
 /// Request format for the anthropic-proxy actor
@@ -159,6 +203,9 @@ pub struct AnthropicResponse {
     
     /// Generated completion data (if operation_type was ChatCompletion)
     pub completion: Option<CompletionResponse>,
+    
+    /// Tool execution result (if operation_type was ExecuteTool)
+    pub tool_result: Option<String>,
     
     /// List of available models (if operation_type was ListModels)
     pub models: Option<Vec<ModelInfo>>,

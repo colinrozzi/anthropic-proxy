@@ -2,7 +2,9 @@ use crate::bindings::ntwk::theater::http_client::{send_http, HttpRequest, HttpRe
 use crate::bindings::ntwk::theater::runtime::log;
 use crate::types::messages::{
     CompletionRequest, CompletionResponse, Message as ApiMessage, ModelInfo, ModelPricing, Usage,
+    MessageContent,
 };
+use crate::types::tools::{ToolDefinition, ToolChoice};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -143,16 +145,19 @@ impl AnthropicClient {
         // Build the request body
         let mut request_body = json!({
             "model": request.model,
-            "messages": request.messages,
             "max_tokens": request.max_tokens.unwrap_or(4096),
         });
+
+        // Format messages correctly based on new content types
+        let formatted_messages = self.format_messages(&request.messages);
+        request_body["messages"] = json!(formatted_messages);
 
         // Add optional parameters
         if let Some(temp) = request.temperature {
             request_body["temperature"] = json!(temp);
         }
 
-        if let Some(system) = request.system {
+        if let Some(system) = &request.system {
             request_body["system"] = json!(system);
         }
 
@@ -160,10 +165,23 @@ impl AnthropicClient {
             request_body["top_p"] = json!(top_p);
         }
 
+        // Add tool-related parameters
+        if let Some(tools) = &request.tools {
+            request_body["tools"] = json!(tools);
+        }
+
+        if let Some(tool_choice) = &request.tool_choice {
+            request_body["tool_choice"] = json!(tool_choice);
+        }
+
+        if let Some(disable_parallel) = request.disable_parallel_tool_use {
+            request_body["disable_parallel_tool_use"] = json!(disable_parallel);
+        }
+
         // Add any additional parameters
-        if let Some(additional) = request.additional_params {
+        if let Some(additional) = &request.additional_params {
             for (key, value) in additional {
-                request_body[key] = value;
+                request_body[key] = value.clone();
             }
         }
 
@@ -204,14 +222,14 @@ impl AnthropicClient {
 
         log(&format!("Got response: {}", String::from_utf8_lossy(&body)));
 
-        let response_data: Value = serde_json::from_slice(&body)?;
-
+        self.parse_response(&body)
+    }
+    
+    /// Parse the API response into a CompletionResponse
+    fn parse_response(&self, body: &[u8]) -> Result<CompletionResponse, AnthropicError> {
+        let response_data: Value = serde_json::from_slice(body)?;
+        
         // Extract required fields
-        let content = response_data["content"][0]["text"]
-            .as_str()
-            .ok_or_else(|| AnthropicError::InvalidResponse("No content text".to_string()))?
-            .to_string();
-
         let id = response_data["id"]
             .as_str()
             .ok_or_else(|| AnthropicError::InvalidResponse("No message ID".to_string()))?
@@ -226,14 +244,8 @@ impl AnthropicClient {
             .as_str()
             .ok_or_else(|| AnthropicError::InvalidResponse("No stop reason".to_string()))?
             .to_string();
-
-        let message_type = response_data["type"]
-            .as_str()
-            .ok_or_else(|| AnthropicError::InvalidResponse("No message type".to_string()))?
-            .to_string();
-
-        let stop_sequence = response_data["stop_sequence"].as_str().map(String::from);
-
+            
+        // Extract usage information
         let input_tokens = response_data["usage"]["input_tokens"]
             .as_u64()
             .ok_or_else(|| AnthropicError::InvalidResponse("No input tokens".to_string()))?
@@ -243,20 +255,146 @@ impl AnthropicClient {
             .as_u64()
             .ok_or_else(|| AnthropicError::InvalidResponse("No output tokens".to_string()))?
             as u32;
-
+            
+        // For backward compatibility
+        let message_type = response_data["type"].as_str().map(String::from);
+        let stop_sequence = response_data["stop_sequence"].as_str().map(String::from);
+        
+        // Parse content blocks
+        let content_blocks = if let Some(content_array) = response_data["content"].as_array() {
+            self.parse_content_blocks(content_array)?
+        } else {
+            vec![MessageContent::Text { 
+                text: "".to_string() 
+            }]
+        };
+        
+        // For backward compatibility, extract text content if present
+        let content = if !content_blocks.is_empty() {
+            if let MessageContent::Text { text } = &content_blocks[0] {
+                Some(text.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        
         // Create the completion response
         Ok(CompletionResponse {
-            content,
+            content_blocks,
             id,
             model,
             stop_reason,
             stop_sequence,
             message_type,
+            content,
             usage: Usage {
                 input_tokens,
                 output_tokens,
             },
         })
+    }
+    
+    /// Parse content blocks from API response
+    fn parse_content_blocks(&self, content_array: &[Value]) -> Result<Vec<MessageContent>, AnthropicError> {
+        let mut content_blocks = Vec::new();
+        
+        for block in content_array {
+            let block_type = block["type"].as_str().unwrap_or("text");
+            
+            match block_type {
+                "text" => {
+                    let text = block["text"]
+                        .as_str()
+                        .ok_or_else(|| AnthropicError::InvalidResponse("Missing text in text block".to_string()))?
+                        .to_string();
+                    
+                    content_blocks.push(MessageContent::Text { text });
+                },
+                "tool_use" => {
+                    let id = block["id"]
+                        .as_str()
+                        .ok_or_else(|| AnthropicError::InvalidResponse("Missing id in tool_use block".to_string()))?
+                        .to_string();
+                    
+                    let name = block["name"]
+                        .as_str()
+                        .ok_or_else(|| AnthropicError::InvalidResponse("Missing name in tool_use block".to_string()))?
+                        .to_string();
+                    
+                    let input = block["input"].clone();
+                    
+                    content_blocks.push(MessageContent::ToolUse { id, name, input });
+                },
+                "tool_result" => {
+                    let tool_use_id = block["tool_use_id"]
+                        .as_str()
+                        .ok_or_else(|| AnthropicError::InvalidResponse("Missing tool_use_id in tool_result block".to_string()))?
+                        .to_string();
+                    
+                    let content = block["content"].clone();
+                    let is_error = block["is_error"].as_bool();
+                    
+                    content_blocks.push(MessageContent::ToolResult { 
+                        tool_use_id, 
+                        content, 
+                        is_error 
+                    });
+                },
+                _ => {
+                    log(&format!("Unknown content block type: {}", block_type));
+                    // Skip unknown content types
+                }
+            }
+        }
+        
+        Ok(content_blocks)
+    }
+    
+    /// Helper method to format messages for API request
+    fn format_messages(&self, messages: &[ApiMessage]) -> Vec<serde_json::Value> {
+        messages.iter().map(|msg| {
+            let mut message_json = json!({
+                "role": msg.role
+            });
+            
+            // Handle the content field based on whether it's a string or array of content blocks
+            if let Some(content_str) = &msg.content_str {
+                message_json["content"] = json!(content_str);
+            } else if !msg.content.is_empty() {
+                message_json["content"] = json!(msg.content);
+            } else {
+                // Legacy support - convert the content string to a text block
+                message_json["content"] = json!([{
+                    "type": "text",
+                    "text": ""
+                }]);
+            }
+            
+            message_json
+        }).collect()
+    }
+
+    /// Execute a tool with the given input
+    pub fn execute_tool(&self, tool_name: &str, tool_input: &Value) -> Result<String, String> {
+        match tool_name {
+            "calculate" => {
+                let expression = match tool_input.get("expression") {
+                    Some(expr) => expr.as_str().unwrap_or(""),
+                    None => return Err("No expression provided".to_string()),
+                };
+                
+                if expression.is_empty() {
+                    return Err("Empty expression".to_string());
+                }
+                
+                // Use the calculator tool implementation
+                crate::tools::evaluate_expression(expression)
+                    .map(|result| result.to_string())
+            },
+            _ => Err(format!("Unknown tool: {}", tool_name)),
+        }
     }
 
     /// Helper function to get max tokens for a given model
@@ -282,7 +420,7 @@ impl AnthropicClient {
             _ => 100000, // Conservative default
         }
     }
-
+    
     /// Helper function to get pricing for a given model
     fn get_model_pricing(&self, model_id: &str) -> ModelPricing {
         match model_id {
