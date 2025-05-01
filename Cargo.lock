@@ -15,8 +15,9 @@ dependencies = [
 
 [[package]]
 name = "anthropic-types"
-version = "0.1.0"
-source = "git+https://github.com/colinrozzi/anthropic-types#80222b5fe369f43c305c2cd0d9b23b40ea157446"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f670d5393e48aefeeb7312ff2c5b0760e1616385d659fadfd6c8b0fd5b19d154"
 dependencies = [
  "serde",
  "serde_json",

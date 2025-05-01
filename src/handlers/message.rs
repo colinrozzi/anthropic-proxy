@@ -19,7 +19,10 @@ pub fn handle_request(
     };
 
     // Debug log the incoming request
-    log(&format!("Received request data: {}", String::from_utf8_lossy(&data)));
+    log(&format!(
+        "Received request data: {}",
+        String::from_utf8_lossy(&data)
+    ));
 
     // Parse the request using the shared AnthropicRequest type
     let request: AnthropicRequest = match serde_json::from_slice(&data) {
@@ -118,90 +121,6 @@ pub fn handle_request(
                         request_id: request.request_id,
                         status: ResponseStatus::Error,
                         error: Some(format!("Failed to list models: {}", e)),
-                        completion: None,
-                        models: None,
-                        tool_result: None,
-                    }
-                }
-            }
-        }
-
-        OperationType::ExecuteTool => {
-            log("Executing tool");
-
-            // Extract tool parameters from the request
-            let tool_name = match &request.params {
-                Some(params) => match params.get("tool_name") {
-                    Some(name) => match name.as_str() {
-                        Some(s) => s,
-                        None => {
-                            return create_error_response(
-                                &state_bytes,
-                                &request.request_id,
-                                "Tool name must be a string",
-                            );
-                        }
-                    },
-                    None => {
-                        return create_error_response(
-                            &state_bytes,
-                            &request.request_id,
-                            "Tool name not provided",
-                        );
-                    }
-                },
-                None => {
-                    return create_error_response(
-                        &state_bytes,
-                        &request.request_id,
-                        "Tool parameters not provided",
-                    );
-                }
-            };
-
-            let tool_input = match &request.params {
-                Some(params) => match params.get("tool_input") {
-                    Some(input) => input,
-                    None => {
-                        return create_error_response(
-                            &state_bytes,
-                            &request.request_id,
-                            "Tool input not provided",
-                        );
-                    }
-                },
-                None => {
-                    return create_error_response(
-                        &state_bytes,
-                        &request.request_id,
-                        "Tool parameters not provided",
-                    );
-                }
-            };
-
-            log(&format!(
-                "Executing tool: {} with input: {}",
-                tool_name, tool_input
-            ));
-
-            // Execute the tool
-            match client.execute_tool(tool_name, tool_input) {
-                Ok(result) => AnthropicResponse {
-                    version: "1.0".to_string(),
-                    request_id: request.request_id,
-                    status: ResponseStatus::Success,
-                    error: None,
-                    completion: None,
-                    models: None,
-                    tool_result: Some(result),
-                },
-                Err(e) => {
-                    log(&format!("Error executing tool: {}", e));
-                    AnthropicResponse {
-                        version: "1.0".to_string(),
-                        request_id: request.request_id,
-                        status: ResponseStatus::Error,
-                        error: Some(format!("Tool execution failed: {}", e)),
                         completion: None,
                         models: None,
                         tool_result: None,

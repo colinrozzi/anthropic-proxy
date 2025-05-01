@@ -1,24 +1,10 @@
 use crate::bindings::ntwk::theater::http_client::{send_http, HttpRequest};
 use crate::bindings::ntwk::theater::runtime::log;
 use anthropic_types::{
-    CompletionRequest, CompletionResponse, Message, MessageContent, ModelInfo, ModelPricing,
-    ToolChoice, ToolDefinition, Usage,
+    CompletionRequest, CompletionResponse, Message, MessageContent, ModelInfo, Usage,
 };
 
 use serde_json::{json, Value};
-use std::error::Error;
-use std::fmt;
-
-/// Simple function to evaluate a mathematical expression
-/// This is a temporary implementation until anthropic-types is updated
-fn evaluate_expression(expression: &str) -> Result<f64, String> {
-    // This is a very simple evaluator that handles basic operations
-    // In a real implementation, you'd use a proper expression parser
-    // For now, we'll just check if it's a simple number
-    expression.parse::<f64>().map_err(|_| {
-        format!("Failed to evaluate expression: '{}'. Only simple numeric values are supported in this implementation.", expression)
-    })
-}
 
 /// Client for interacting with the Anthropic API
 pub struct AnthropicClient {
@@ -134,10 +120,6 @@ impl AnthropicClient {
 
         if let Some(system) = &request.system {
             request_body["system"] = json!(system);
-        }
-
-        if let Some(top_p) = request.top_p {
-            request_body["top_p"] = json!(top_p);
         }
 
         // Add tool-related parameters
@@ -368,9 +350,7 @@ impl AnthropicClient {
                 });
 
                 // Handle the content field based on whether it's a string or array of content blocks
-                if let Some(content_str) = &msg.content_str {
-                    message_json["content"] = json!(content_str);
-                } else if !msg.content.is_empty() {
+                if !msg.content.is_empty() {
                     message_json["content"] = json!(msg.content);
                 } else {
                     // Legacy support - convert the content string to a text block
@@ -383,25 +363,5 @@ impl AnthropicClient {
                 message_json
             })
             .collect()
-    }
-
-    /// Execute a tool with the given input
-    pub fn execute_tool(&self, tool_name: &str, tool_input: &Value) -> Result<String, String> {
-        match tool_name {
-            "calculate" => {
-                let expression = match tool_input.get("expression") {
-                    Some(expr) => expr.as_str().unwrap_or(""),
-                    None => return Err("No expression provided".to_string()),
-                };
-
-                if expression.is_empty() {
-                    return Err("Empty expression".to_string());
-                }
-
-                // Use the calculator tool implementation
-                evaluate_expression(expression).map(|result| result.to_string())
-            }
-            _ => Err(format!("Unknown tool: {}", tool_name)),
-        }
     }
 }

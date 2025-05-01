@@ -4,12 +4,12 @@ mod handlers;
 mod types;
 // Tools module removed, now using anthropic-types
 
-use anthropic_types;
 use crate::api::AnthropicClient;
 use crate::bindings::exports::ntwk::theater::actor::Guest;
 use crate::bindings::exports::ntwk::theater::message_server_client::Guest as MessageServerClient;
 use crate::bindings::ntwk::theater::runtime::log;
 use crate::types::state::{Config, State};
+use anthropic_types;
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -43,7 +43,7 @@ impl Guest for Component {
         };
 
         log("Init data parsed successfully");
-        
+
         // Initialize state
         let state = State::new(
             id,
@@ -51,18 +51,16 @@ impl Guest for Component {
             init_data.store_id,
             init_data.config,
         );
-        
+
         log("State initialized");
-        
+
         // Serialize and return the state
         match serde_json::to_vec(&state) {
             Ok(state_bytes) => {
                 log("Actor initialized successfully");
                 Ok((Some(state_bytes),))
-            },
-            Err(e) => {
-                Err(format!("Failed to serialize state: {}", e))
             }
+            Err(e) => Err(format!("Failed to serialize state: {}", e)),
         }
     }
 }
@@ -74,7 +72,7 @@ impl MessageServerClient for Component {
     ) -> Result<(Option<Vec<u8>>,), String> {
         log("Handling send message in anthropic-proxy");
         let (data,) = params;
-        
+
         // Nothing to return for a send
         Ok((state,))
     }
@@ -86,7 +84,7 @@ impl MessageServerClient for Component {
         log("Handling request message in anthropic-proxy");
         let (request_id, data) = params;
         log(&format!("Request ID: {}", request_id));
-        
+
         // Use our message handler
         handlers::message::handle_request(data, state.unwrap())
     }
@@ -102,7 +100,7 @@ impl MessageServerClient for Component {
         String,
     > {
         log("Channel open request received");
-        
+
         Ok((
             state,
             (
@@ -121,7 +119,7 @@ impl MessageServerClient for Component {
     {
         let (channel_id,) = params;
         log(&format!("Channel {} closed", channel_id));
-        
+
         Ok((state,))
     }
 
@@ -135,7 +133,7 @@ impl MessageServerClient for Component {
     {
         let (channel_id, message) = params;
         log(&format!("Received message on channel {}", channel_id));
-        
+
         Ok((state,))
     }
 }
