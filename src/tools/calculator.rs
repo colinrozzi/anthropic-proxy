@@ -1,4 +1,4 @@
-use crate::types::tools::ToolDefinition;
+use crate::tools::ToolDefinition;
 use serde_json::json;
 
 /// Returns a definition for a calculator tool that can perform basic arithmetic

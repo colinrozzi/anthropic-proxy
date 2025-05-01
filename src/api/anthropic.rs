@@ -4,7 +4,7 @@ use crate::types::messages::{
     CompletionRequest, CompletionResponse, Message as ApiMessage, ModelInfo, ModelPricing, Usage,
     MessageContent,
 };
-use crate::types::tools::{ToolDefinition, ToolChoice};
+use crate::tools::{ToolDefinition, ToolChoice};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};

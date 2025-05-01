@@ -1,6 +1,6 @@
 pub mod state;
 pub mod messages;
-pub mod tools;
 
 pub use state::{Config, State};
-pub use tools::{ToolDefinition, ToolChoice};
+// Import tools from the root module
+pub use crate::tools::{ToolDefinition, ToolChoice};

@@ -4,12 +4,12 @@ mod handlers;
 mod types;
 mod tools;
 
+use anthropic_types;
 use crate::api::AnthropicClient;
 use crate::bindings::exports::ntwk::theater::actor::Guest;
 use crate::bindings::exports::ntwk::theater::message_server_client::Guest as MessageServerClient;
 use crate::bindings::ntwk::theater::runtime::log;
 use crate::types::state::{Config, State};
-use crate::types::messages::AnthropicResponse;
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;

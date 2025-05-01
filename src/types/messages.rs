@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::types::tools::{ToolDefinition, ToolChoice};
+use crate::tools::{ToolDefinition, ToolChoice};
 
 /// Different types of content that can be in a message
 #[derive(Serialize, Deserialize, Debug, Clone)]

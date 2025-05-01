@@ -1,7 +1,7 @@
 use crate::api::AnthropicClient;
 use crate::bindings::ntwk::theater::runtime::log;
-use crate::types::messages::{
-    AnthropicRequest, AnthropicResponse, CompletionRequest, OperationType, ResponseStatus,
+use anthropic_types::{
+    AnthropicRequest, AnthropicResponse, CompletionRequest, OperationType, ResponseStatus
 };
 use crate::types::state::State;
 use crate::tools;

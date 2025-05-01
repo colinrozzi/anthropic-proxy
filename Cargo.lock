@@ -6,10 +6,20 @@ version = 4
 name = "anthropic-proxy"
 version = "0.1.0"
 dependencies = [
+ "anthropic-types",
  "serde",
  "serde_json",
  "toml",
  "wit-bindgen-rt",
+]
+
+[[package]]
+name = "anthropic-types"
+version = "0.1.0"
+source = "git+https://github.com/colinrozzi/anthropic-types#80222b5fe369f43c305c2cd0d9b23b40ea157446"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
