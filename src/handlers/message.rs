@@ -18,6 +18,9 @@ pub fn handle_request(
         }
     };
 
+    // Debug log the incoming request
+    log(&format!("Received request data: {}", String::from_utf8_lossy(&data)));
+
     // Parse the request using the shared AnthropicRequest type
     let request: AnthropicRequest = match serde_json::from_slice(&data) {
         Ok(req) => req,
