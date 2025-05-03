@@ -64,10 +64,9 @@ impl Guest for Component {
 impl MessageServerClient for Component {
     fn handle_send(
         state: Option<Vec<u8>>,
-        params: (Vec<u8>,),
+        _params: (Vec<u8>,),
     ) -> Result<(Option<Vec<u8>>,), String> {
         log("Handling send message in anthropic-proxy");
-        let (data,) = params;
 
         // Nothing to return for a send
         Ok((state,))
@@ -87,7 +86,7 @@ impl MessageServerClient for Component {
 
     fn handle_channel_open(
         state: Option<bindings::exports::ntwk::theater::message_server_client::Json>,
-        params: (bindings::exports::ntwk::theater::message_server_client::Json,),
+        _params: (bindings::exports::ntwk::theater::message_server_client::Json,),
     ) -> Result<
         (
             Option<bindings::exports::ntwk::theater::message_server_client::Json>,
@@ -127,7 +126,7 @@ impl MessageServerClient for Component {
         ),
     ) -> Result<(Option<bindings::exports::ntwk::theater::message_server_client::Json>,), String>
     {
-        let (channel_id, message) = params;
+        let (channel_id, _message) = params;
         log(&format!("Received message on channel {}", channel_id));
 
         Ok((state,))
