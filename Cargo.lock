@@ -6,22 +6,12 @@ version = 4
 name = "anthropic-proxy"
 version = "0.1.0"
 dependencies = [
- "anthropic-types",
+ "genai-types",
+ "mcp-protocol",
  "serde",
  "serde_json",
  "toml",
  "wit-bindgen-rt",
-]
-
-[[package]]
-name = "anthropic-types"
-version = "0.1.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89a62d9ea05e9da0c73b22a8be6accae7296704f4286e4f4a114946393a2d823"
-dependencies = [
- "mcp-protocol",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -35,6 +25,17 @@ name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
+name = "genai-types"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "475deae6421ef51d59c5f00903baa03728ba4f8dfffc23715a738b697b97b47f"
+dependencies = [
+ "mcp-protocol",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "hashbrown"
@@ -60,9 +61,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "mcp-protocol"
-version = "0.1.11"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8b4007de6cab753dbfb291e5cfcf3f0f5bfecda65268ba9d28deeaf8051880e"
+checksum = "ccf8b1c9deb6761095dad04f4d839c9a1877f6a4655877edaca6637641231a44"
 dependencies = [
  "serde",
  "serde_json",

@@ -1,7 +1,7 @@
 use crate::api::AnthropicClient;
 use crate::bindings::ntwk::theater::runtime::log;
 use crate::types::state::State;
-use anthropic_types::{AnthropicRequest, AnthropicResponse};
+use genai_types::{ProxyRequest, ProxyResponse};
 
 pub fn handle_request(
     data: Vec<u8>,
@@ -25,13 +25,13 @@ pub fn handle_request(
     ));
 
     // Parse the request using the shared AnthropicRequest type
-    let request: AnthropicRequest = match serde_json::from_slice(&data) {
+    let request: ProxyRequest = match serde_json::from_slice(&data) {
         Ok(req) => req,
         Err(e) => {
             log(&format!("Error parsing request: {}", e));
 
             // Try to respond with a properly formatted error
-            let error_response = AnthropicResponse::Error {
+            let error_response = ProxyResponse::Error {
                 error: format!("Invalid request format: {}", e),
             };
 
@@ -47,31 +47,35 @@ pub fn handle_request(
 
     // Process based on operation type
     let response = match request {
-        AnthropicRequest::GenerateCompletion { request } => {
+        ProxyRequest::GenerateCompletion { request } => {
             log(&format!(
                 "Generating completion with model: {}",
                 request.model
             ));
 
-            match client.generate_completion(request) {
-                Ok(completion) => AnthropicResponse::Completion { completion },
+            match client.generate_completion(request.into()) {
+                Ok(completion) => ProxyResponse::Completion {
+                    completion: completion.into(),
+                },
                 Err(e) => {
                     log(&format!("Error generating completion: {}", e));
-                    AnthropicResponse::Error {
+                    ProxyResponse::Error {
                         error: format!("Failed to generate completion: {}", e),
                     }
                 }
             }
         }
 
-        AnthropicRequest::ListModels => {
+        ProxyRequest::ListModels => {
             log("Listing available models");
 
             match client.list_models() {
-                Ok(models) => AnthropicResponse::ListModels { models },
+                Ok(models) => ProxyResponse::ListModels {
+                    models: models.into_iter().map(|m| m.into()).collect(),
+                },
                 Err(e) => {
                     log(&format!("Error listing models: {}", e));
-                    AnthropicResponse::Error {
+                    ProxyResponse::Error {
                         error: format!("Failed to list models: {}", e),
                     }
                 }

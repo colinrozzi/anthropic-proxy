@@ -1,10 +1,10 @@
 use crate::bindings::ntwk::theater::http_client::{send_http, HttpRequest};
 use crate::bindings::ntwk::theater::runtime::log;
-use anthropic_types::{
-    CompletionRequest, CompletionResponse, Message, MessageContent, ModelInfo, Usage,
+use crate::types::api::{
+    AnthropicCompletionRequest, AnthropicCompletionResponse, AnthropicError, AnthropicModelInfo,
 };
 
-use serde_json::{json, Value};
+use serde_json::Value;
 
 /// Client for interacting with the Anthropic API
 pub struct AnthropicClient {
@@ -29,7 +29,7 @@ impl AnthropicClient {
     }
 
     /// List available models from the Anthropic API
-    pub fn list_models(&self) -> Result<Vec<ModelInfo>, anthropic_types::AnthropicError> {
+    pub fn list_models(&self) -> Result<Vec<AnthropicModelInfo>, AnthropicError> {
         log("Listing available Anthropic models");
 
         let request = HttpRequest {
@@ -46,22 +46,22 @@ impl AnthropicClient {
         // Send the request
         let response = match send_http(&request) {
             Ok(resp) => resp,
-            Err(e) => return Err(anthropic_types::AnthropicError::HttpError(e)),
+            Err(e) => return Err(AnthropicError::HttpError(e)),
         };
 
         // Check status code
         if response.status != 200 {
             let message = String::from_utf8_lossy(&response.body.unwrap_or_default()).to_string();
-            return Err(anthropic_types::AnthropicError::ApiError {
+            return Err(AnthropicError::ApiError {
                 status: response.status,
                 message,
             });
         }
 
         // Parse the response
-        let body = response.body.ok_or_else(|| {
-            anthropic_types::AnthropicError::InvalidResponse("No response body".to_string())
-        })?;
+        let body = response
+            .body
+            .ok_or_else(|| AnthropicError::InvalidResponse("No response body".to_string()))?;
 
         log(&format!(
             "Models API response: {}",
@@ -79,10 +79,10 @@ impl AnthropicClient {
                     model_data.get("id").and_then(|v| v.as_str()),
                     model_data.get("display_name").and_then(|v| v.as_str()),
                 ) {
-                    let max_tokens = ModelInfo::get_max_tokens(id);
-                    let pricing = ModelInfo::get_pricing(id);
+                    let max_tokens = AnthropicModelInfo::get_max_tokens(id);
+                    let pricing = AnthropicModelInfo::get_pricing(id);
 
-                    models.push(ModelInfo {
+                    models.push(AnthropicModelInfo {
                         id: id.to_string(),
                         display_name: name.to_string(),
                         max_tokens,
@@ -99,8 +99,8 @@ impl AnthropicClient {
     /// Generate a completion using the Anthropic API
     pub fn generate_completion(
         &self,
-        request: CompletionRequest,
-    ) -> Result<CompletionResponse, anthropic_types::AnthropicError> {
+        request: AnthropicCompletionRequest,
+    ) -> Result<AnthropicCompletionResponse, AnthropicError> {
         log("Generating completion with Anthropic API");
 
         // Create the HTTP request
@@ -118,26 +118,25 @@ impl AnthropicClient {
         // Send the request
         let response = match send_http(&http_request) {
             Ok(resp) => resp,
-            Err(e) => return Err(anthropic_types::AnthropicError::HttpError(e)),
+            Err(e) => return Err(AnthropicError::HttpError(e)),
         };
 
         // Check status code
         if response.status != 200 {
             let message = String::from_utf8_lossy(&response.body.unwrap_or_default()).to_string();
-            return Err(anthropic_types::AnthropicError::ApiError {
+            return Err(AnthropicError::ApiError {
                 status: response.status,
                 message,
             });
         }
 
         // Parse the response
-        let body = response.body.ok_or_else(|| {
-            anthropic_types::AnthropicError::InvalidResponse("No response body".to_string())
-        })?;
+        let body = response
+            .body
+            .ok_or_else(|| AnthropicError::InvalidResponse("No response body".to_string()))?;
 
         log(&format!("Got response: {}", String::from_utf8_lossy(&body)));
 
-        serde_json::from_slice(&body)
-            .map_err(|e| anthropic_types::AnthropicError::InvalidResponse(e.to_string()))
+        serde_json::from_slice(&body).map_err(|e| AnthropicError::InvalidResponse(e.to_string()))
     }
 }
