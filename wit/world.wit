@@ -3,6 +3,7 @@ package ntwk:theater;
 world anthropic-proxy {
     import runtime;
     import http-client;
+    import environment;
 
     export message-server-client;
     export actor;

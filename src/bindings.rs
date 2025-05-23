@@ -16,7 +16,6 @@ pub mod ntwk {
         /// The types interface provides common data structures and type aliases used
         /// throughout the Theater system. These types represent core concepts such as:
         ///
-        /// - Actor state
         /// - Message formats
         /// - Event chain structures
         /// - Identifiers
@@ -29,18 +28,7 @@ pub mod ntwk {
         /// These types are typically imported and used in actor implementations:
         ///
         /// ```rust
-        /// use ntwk::theater::types::{state, json, actor_id};
-        ///
-        /// // Using the state type for actor state
-        /// fn process_state(current_state: state) -> Result<state, String> {
-        ///     // Process the state
-        ///     Ok(current_state)
-        /// }
-        ///
-        /// // Using the json type for serialized data
-        /// fn create_message() -> json {
-        ///     serde_json::to_vec(&MyMessage { value: 42 }).unwrap()
-        /// }
+        /// use ntwk::theater::types::actor_id;
         ///
         /// // Using actor-id for referring to actors
         /// fn get_actor_info(id: actor_id) -> String {
@@ -60,18 +48,6 @@ pub mod ntwk {
             #[doc(hidden)]
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
-            /// Generic message type as bytes that can be serialized/deserialized
-            ///
-            /// Represents JSON-encoded data as a byte array. This type is used for
-            /// passing structured data between components that may need to be serialized
-            /// and deserialized.
-            pub type Json = _rt::Vec<u8>;
-            /// Actor state represented as an optional byte array
-            ///
-            /// This type represents the current state of an actor. The state is:
-            /// - None when an actor is first initialized and has no state yet
-            /// - Some(bytes) containing serialized state data when the actor has state
-            pub type State = Option<_rt::Vec<u8>>;
             /// Unique identifier for a channel
             ///
             /// Channels are communication pathways between actors or between actors and
@@ -86,7 +62,7 @@ pub mod ntwk {
                 /// Whether the channel connection was accepted
                 pub accepted: bool,
                 /// Optional initial message to send on the channel
-                pub message: Option<Json>,
+                pub message: Option<_rt::Vec<u8>>,
             }
             impl ::core::fmt::Debug for ChannelAccept {
                 fn fmt(
@@ -110,7 +86,7 @@ pub mod ntwk {
                 /// Optional reference to parent event (previous in chain)
                 pub parent: Option<u64>,
                 /// Serialized event data
-                pub data: Json,
+                pub data: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for Event {
                 fn fmt(
@@ -161,6 +137,76 @@ pub mod ntwk {
                     f: &mut ::core::fmt::Formatter<'_>,
                 ) -> ::core::fmt::Result {
                     f.debug_struct("Chain").field("events", &self.events).finish()
+                }
+            }
+            /// Actor error
+            #[repr(u8)]
+            #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
+            pub enum WitErrorType {
+                OperationTimeout,
+                ChannelClosed,
+                ShuttingDown,
+                FunctionNotFound,
+                TypeMismatch,
+                Internal,
+                SerializationError,
+                UpdateComponentError,
+                Paused,
+            }
+            impl ::core::fmt::Debug for WitErrorType {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    match self {
+                        WitErrorType::OperationTimeout => {
+                            f.debug_tuple("WitErrorType::OperationTimeout").finish()
+                        }
+                        WitErrorType::ChannelClosed => {
+                            f.debug_tuple("WitErrorType::ChannelClosed").finish()
+                        }
+                        WitErrorType::ShuttingDown => {
+                            f.debug_tuple("WitErrorType::ShuttingDown").finish()
+                        }
+                        WitErrorType::FunctionNotFound => {
+                            f.debug_tuple("WitErrorType::FunctionNotFound").finish()
+                        }
+                        WitErrorType::TypeMismatch => {
+                            f.debug_tuple("WitErrorType::TypeMismatch").finish()
+                        }
+                        WitErrorType::Internal => {
+                            f.debug_tuple("WitErrorType::Internal").finish()
+                        }
+                        WitErrorType::SerializationError => {
+                            f.debug_tuple("WitErrorType::SerializationError").finish()
+                        }
+                        WitErrorType::UpdateComponentError => {
+                            f.debug_tuple("WitErrorType::UpdateComponentError").finish()
+                        }
+                        WitErrorType::Paused => {
+                            f.debug_tuple("WitErrorType::Paused").finish()
+                        }
+                    }
+                }
+            }
+            impl WitErrorType {
+                #[doc(hidden)]
+                pub unsafe fn _lift(val: u8) -> WitErrorType {
+                    if !cfg!(debug_assertions) {
+                        return ::core::mem::transmute(val);
+                    }
+                    match val {
+                        0 => WitErrorType::OperationTimeout,
+                        1 => WitErrorType::ChannelClosed,
+                        2 => WitErrorType::ShuttingDown,
+                        3 => WitErrorType::FunctionNotFound,
+                        4 => WitErrorType::TypeMismatch,
+                        5 => WitErrorType::Internal,
+                        6 => WitErrorType::SerializationError,
+                        7 => WitErrorType::UpdateComponentError,
+                        8 => WitErrorType::Paused,
+                        _ => panic!("invalid enum discriminant"),
+                    }
                 }
             }
         }
@@ -364,6 +410,75 @@ pub mod ntwk {
                         events: result13,
                     };
                     result14
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn shutdown(data: Option<&[u8]>) -> Result<(), _rt::String> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 3 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 3
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let (result1_0, result1_1, result1_2) = match data {
+                        Some(e) => {
+                            let vec0 = e;
+                            let ptr0 = vec0.as_ptr().cast::<u8>();
+                            let len0 = vec0.len();
+                            (1i32, ptr0.cast_mut(), len0)
+                        }
+                        None => (0i32, ::core::ptr::null_mut(), 0usize),
+                    };
+                    let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "ntwk:theater/runtime")]
+                    unsafe extern "C" {
+                        #[link_name = "shutdown"]
+                        fn wit_import3(_: i32, _: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import3(
+                        _: i32,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import3(result1_0, result1_1, result1_2, ptr2) };
+                    let l4 = i32::from(*ptr2.add(0).cast::<u8>());
+                    let result8 = match l4 {
+                        0 => {
+                            let e = ();
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l5 = *ptr2
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l6 = *ptr2
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len7 = l6;
+                                let bytes7 = _rt::Vec::from_raw_parts(
+                                    l5.cast(),
+                                    len7,
+                                    len7,
+                                );
+                                _rt::string_lift(bytes7)
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result8
                 }
             }
         }
@@ -656,6 +771,157 @@ pub mod ntwk {
                 }
             }
         }
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod environment {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            #[allow(unused_unsafe, clippy::all)]
+            /// Get a specific environment variable
+            /// Returns None if the variable doesn't exist or access is denied
+            pub fn get_var(name: &str) -> Option<_rt::String> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 3 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 3
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = name;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "ntwk:theater/environment")]
+                    unsafe extern "C" {
+                        #[link_name = "get-var"]
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import2(ptr0.cast_mut(), len0, ptr1) };
+                    let l3 = i32::from(*ptr1.add(0).cast::<u8>());
+                    let result7 = match l3 {
+                        0 => None,
+                        1 => {
+                            let e = {
+                                let l4 = *ptr1
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l5 = *ptr1
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len6 = l5;
+                                let bytes6 = _rt::Vec::from_raw_parts(
+                                    l4.cast(),
+                                    len6,
+                                    len6,
+                                );
+                                _rt::string_lift(bytes6)
+                            };
+                            Some(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result7
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// List all accessible environment variables
+            /// Returns empty list if list_all is not enabled in config
+            pub fn list_vars() -> _rt::Vec<(_rt::String, _rt::String)> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 2 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 2
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "ntwk:theater/environment")]
+                    unsafe extern "C" {
+                        #[link_name = "list-vars"]
+                        fn wit_import1(_: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import1(_: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import1(ptr0) };
+                    let l2 = *ptr0.add(0).cast::<*mut u8>();
+                    let l3 = *ptr0
+                        .add(::core::mem::size_of::<*const u8>())
+                        .cast::<usize>();
+                    let base10 = l2;
+                    let len10 = l3;
+                    let mut result10 = _rt::Vec::with_capacity(len10);
+                    for i in 0..len10 {
+                        let base = base10
+                            .add(i * (4 * ::core::mem::size_of::<*const u8>()));
+                        let e10 = {
+                            let l4 = *base.add(0).cast::<*mut u8>();
+                            let l5 = *base
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<usize>();
+                            let len6 = l5;
+                            let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
+                            let l7 = *base
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>();
+                            let l8 = *base
+                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>();
+                            let len9 = l8;
+                            let bytes9 = _rt::Vec::from_raw_parts(l7.cast(), len9, len9);
+                            (_rt::string_lift(bytes6), _rt::string_lift(bytes9))
+                        };
+                        result10.push(e10);
+                    }
+                    _rt::cabi_dealloc(
+                        base10,
+                        len10 * (4 * ::core::mem::size_of::<*const u8>()),
+                        ::core::mem::size_of::<*const u8>(),
+                    );
+                    let result11 = result10;
+                    result11
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Check if a specific environment variable exists (and is accessible)
+            pub fn exists(name: &str) -> bool {
+                unsafe {
+                    let vec0 = name;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "ntwk:theater/environment")]
+                    unsafe extern "C" {
+                        #[link_name = "exists"]
+                        fn wit_import1(_: *mut u8, _: usize) -> i32;
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import1(_: *mut u8, _: usize) -> i32 {
+                        unreachable!()
+                    }
+                    let ret = unsafe { wit_import1(ptr0.cast_mut(), len0) };
+                    _rt::bool_lift(ret as u8)
+                }
+            }
+        }
     }
 }
 #[rustfmt::skip]
@@ -682,7 +948,7 @@ pub mod exports {
             ///
             /// ```rust
             /// use ntwk::theater::message_server_client::Guest;
-            /// use ntwk::theater::types::{json, channel_accept, channel_id};
+            /// use ntwk::theater::types::{channel_accept, channel_id};
             /// use serde_json::{json, Value};
             ///
             /// struct MyMessageHandler;
@@ -726,7 +992,6 @@ pub mod exports {
                 #[doc(hidden)]
                 static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
                 use super::super::super::super::_rt;
-                pub type Json = super::super::super::super::ntwk::theater::types::Json;
                 pub type ChannelId = super::super::super::super::ntwk::theater::types::ChannelId;
                 pub type ChannelAccept = super::super::super::super::ntwk::theater::types::ChannelAccept;
                 #[doc(hidden)]
@@ -994,10 +1259,14 @@ pub mod exports {
                     arg2: usize,
                     arg3: *mut u8,
                     arg4: usize,
+                    arg5: *mut u8,
+                    arg6: usize,
                 ) -> *mut u8 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
                     let len1 = arg4;
-                    let result2 = T::handle_channel_open(
+                    let bytes1 = _rt::Vec::from_raw_parts(arg3.cast(), len1, len1);
+                    let len2 = arg6;
+                    let result3 = T::handle_channel_open(
                         match arg0 {
                             0 => None,
                             1 => {
@@ -1009,84 +1278,87 @@ pub mod exports {
                             }
                             _ => _rt::invalid_enum_discriminant(),
                         },
-                        (_rt::Vec::from_raw_parts(arg3.cast(), len1, len1),),
+                        (
+                            _rt::string_lift(bytes1),
+                            _rt::Vec::from_raw_parts(arg5.cast(), len2, len2),
+                        ),
                     );
-                    let ptr3 = (&raw mut _RET_AREA.0).cast::<u8>();
-                    match result2 {
+                    let ptr4 = (&raw mut _RET_AREA.0).cast::<u8>();
+                    match result3 {
                         Ok(e) => {
-                            *ptr3.add(0).cast::<u8>() = (0i32) as u8;
-                            let (t4_0, t4_1) = e;
-                            match t4_0 {
+                            *ptr4.add(0).cast::<u8>() = (0i32) as u8;
+                            let (t5_0, t5_1) = e;
+                            match t5_0 {
                                 Some(e) => {
-                                    *ptr3
+                                    *ptr4
                                         .add(::core::mem::size_of::<*const u8>())
                                         .cast::<u8>() = (1i32) as u8;
-                                    let vec5 = (e).into_boxed_slice();
-                                    let ptr5 = vec5.as_ptr().cast::<u8>();
-                                    let len5 = vec5.len();
-                                    ::core::mem::forget(vec5);
-                                    *ptr3
+                                    let vec6 = (e).into_boxed_slice();
+                                    let ptr6 = vec6.as_ptr().cast::<u8>();
+                                    let len6 = vec6.len();
+                                    ::core::mem::forget(vec6);
+                                    *ptr4
                                         .add(3 * ::core::mem::size_of::<*const u8>())
-                                        .cast::<usize>() = len5;
-                                    *ptr3
+                                        .cast::<usize>() = len6;
+                                    *ptr4
                                         .add(2 * ::core::mem::size_of::<*const u8>())
-                                        .cast::<*mut u8>() = ptr5.cast_mut();
+                                        .cast::<*mut u8>() = ptr6.cast_mut();
                                 }
                                 None => {
-                                    *ptr3
+                                    *ptr4
                                         .add(::core::mem::size_of::<*const u8>())
                                         .cast::<u8>() = (0i32) as u8;
                                 }
                             };
-                            let (t6_0,) = t4_1;
+                            let (t7_0,) = t5_1;
                             let super::super::super::super::ntwk::theater::types::ChannelAccept {
-                                accepted: accepted7,
-                                message: message7,
-                            } = t6_0;
-                            *ptr3
+                                accepted: accepted8,
+                                message: message8,
+                            } = t7_0;
+                            *ptr4
                                 .add(4 * ::core::mem::size_of::<*const u8>())
-                                .cast::<u8>() = (match accepted7 {
+                                .cast::<u8>() = (match accepted8 {
                                 true => 1,
                                 false => 0,
                             }) as u8;
-                            match message7 {
+                            match message8 {
                                 Some(e) => {
-                                    *ptr3
+                                    *ptr4
                                         .add(5 * ::core::mem::size_of::<*const u8>())
                                         .cast::<u8>() = (1i32) as u8;
-                                    let vec8 = (e).into_boxed_slice();
-                                    let ptr8 = vec8.as_ptr().cast::<u8>();
-                                    let len8 = vec8.len();
-                                    ::core::mem::forget(vec8);
-                                    *ptr3
+                                    let vec9 = (e).into_boxed_slice();
+                                    let ptr9 = vec9.as_ptr().cast::<u8>();
+                                    let len9 = vec9.len();
+                                    ::core::mem::forget(vec9);
+                                    *ptr4
                                         .add(7 * ::core::mem::size_of::<*const u8>())
-                                        .cast::<usize>() = len8;
-                                    *ptr3
+                                        .cast::<usize>() = len9;
+                                    *ptr4
                                         .add(6 * ::core::mem::size_of::<*const u8>())
-                                        .cast::<*mut u8>() = ptr8.cast_mut();
+                                        .cast::<*mut u8>() = ptr9.cast_mut();
                                 }
                                 None => {
-                                    *ptr3
+                                    *ptr4
                                         .add(5 * ::core::mem::size_of::<*const u8>())
                                         .cast::<u8>() = (0i32) as u8;
                                 }
                             };
                         }
                         Err(e) => {
-                            *ptr3.add(0).cast::<u8>() = (1i32) as u8;
-                            let vec9 = (e.into_bytes()).into_boxed_slice();
-                            let ptr9 = vec9.as_ptr().cast::<u8>();
-                            let len9 = vec9.len();
-                            ::core::mem::forget(vec9);
-                            *ptr3
+                            *ptr4.add(0).cast::<u8>() = (1i32) as u8;
+                            let vec10 = (e.into_bytes()).into_boxed_slice();
+                            let ptr10 = vec10.as_ptr().cast::<u8>();
+                            let len10 = vec10.len();
+                            ::core::mem::forget(vec10);
+                            *ptr4
                                 .add(2 * ::core::mem::size_of::<*const u8>())
-                                .cast::<usize>() = len9;
-                            *ptr3
+                                .cast::<usize>() = len10;
+                            *ptr4
                                 .add(::core::mem::size_of::<*const u8>())
-                                .cast::<*mut u8>() = ptr9.cast_mut();
+                                .cast::<*mut u8>() = ptr10.cast_mut();
                         }
                     };
-                    ptr3
+                    ptr4
                 }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
@@ -1377,7 +1649,7 @@ pub mod exports {
                     ///
                     /// ## Returns
                     ///
-                    /// * `Ok((option<json>,))` - Updated actor state (or None to retain current state)
+                    /// * `Ok((option<list<u8>>,))` - Updated actor state (or None to retain current state)
                     /// * `Err(string)` - Error message if message handling fails
                     ///
                     /// ## Example
@@ -1393,9 +1665,9 @@ pub mod exports {
                     /// }
                     /// ```
                     fn handle_send(
-                        state: Option<Json>,
-                        params: (Json,),
-                    ) -> Result<(Option<Json>,), _rt::String>;
+                        state: Option<_rt::Vec<u8>>,
+                        params: (_rt::Vec<u8>,),
+                    ) -> Result<(Option<_rt::Vec<u8>>,), _rt::String>;
                     /// # Handle request-response message
                     ///
                     /// Processes a request that requires a response.
@@ -1409,7 +1681,7 @@ pub mod exports {
                     ///
                     /// ## Returns
                     ///
-                    /// * `Ok((option<json>, (option<json>,)))` - Tuple containing:
+                    /// * `Ok((option<list<u8>>, (option<list<u8>>,)))` - Tuple containing:
                     ///   * Updated actor state (or None)
                     ///   * Response message to send back (or None to send a response yet)
                     /// * `Err(string)` - Error message if request handling fails
@@ -1429,9 +1701,12 @@ pub mod exports {
                     /// }
                     /// ```
                     fn handle_request(
-                        state: Option<Json>,
-                        params: (_rt::String, Json),
-                    ) -> Result<(Option<Json>, (Option<Json>,)), _rt::String>;
+                        state: Option<_rt::Vec<u8>>,
+                        params: (_rt::String, _rt::Vec<u8>),
+                    ) -> Result<
+                        (Option<_rt::Vec<u8>>, (Option<_rt::Vec<u8>>,)),
+                        _rt::String,
+                    >;
                     /// # Handle channel open request
                     ///
                     /// Called when another actor requests to open a communication channel.
@@ -1444,7 +1719,7 @@ pub mod exports {
                     ///
                     /// ## Returns
                     ///
-                    /// * `Ok((option<json>, (channel-accept,)))` - Tuple containing:
+                    /// * `Ok((option<list<u8>>, (channel-accept,)))` - Tuple containing:
                     ///   * Updated actor state (or None to retain current state)
                     ///   * Channel acceptance decision
                     /// * `Err(string)` - Error message if open handling fails
@@ -1472,9 +1747,9 @@ pub mod exports {
                     /// The actor should validate the channel request and only accept channels from
                     /// trusted sources. The acceptance mechanism provides a security checkpoint.
                     fn handle_channel_open(
-                        state: Option<Json>,
-                        params: (Json,),
-                    ) -> Result<(Option<Json>, (ChannelAccept,)), _rt::String>;
+                        state: Option<_rt::Vec<u8>>,
+                        params: (_rt::String, _rt::Vec<u8>),
+                    ) -> Result<(Option<_rt::Vec<u8>>, (ChannelAccept,)), _rt::String>;
                     /// # Handle channel message
                     ///
                     /// Processes a message received on an established channel.
@@ -1488,7 +1763,7 @@ pub mod exports {
                     ///
                     /// ## Returns
                     ///
-                    /// * `Ok((option<json>,))` - Updated actor state (or None to retain current state)
+                    /// * `Ok((option<list<u8>>,))` - Updated actor state (or None to retain current state)
                     /// * `Err(string)` - Error message if message handling fails
                     ///
                     /// ## Example
@@ -1506,9 +1781,9 @@ pub mod exports {
                     /// }
                     /// ```
                     fn handle_channel_message(
-                        state: Option<Json>,
-                        params: (ChannelId, Json),
-                    ) -> Result<(Option<Json>,), _rt::String>;
+                        state: Option<_rt::Vec<u8>>,
+                        params: (ChannelId, _rt::Vec<u8>),
+                    ) -> Result<(Option<_rt::Vec<u8>>,), _rt::String>;
                     /// # Handle channel close
                     ///
                     /// Called when a communication channel is closed.
@@ -1521,7 +1796,7 @@ pub mod exports {
                     ///
                     /// ## Returns
                     ///
-                    /// * `Ok((option<json>,))` - Updated actor state (or None to retain current state)
+                    /// * `Ok((option<list<u8>>,))` - Updated actor state (or None to retain current state)
                     /// * `Err(string)` - Error message if close handling fails
                     ///
                     /// ## Example
@@ -1544,9 +1819,9 @@ pub mod exports {
                     /// This function should perform any necessary cleanup for the closed channel,
                     /// such as releasing resources or updating internal state to reflect the channel closure.
                     fn handle_channel_close(
-                        state: Option<Json>,
+                        state: Option<_rt::Vec<u8>>,
                         params: (ChannelId,),
-                    ) -> Result<(Option<Json>,), _rt::String>;
+                    ) -> Result<(Option<_rt::Vec<u8>>,), _rt::String>;
                 }
                 #[doc(hidden)]
                 macro_rules! __export_ntwk_theater_message_server_client_cabi {
@@ -1574,10 +1849,10 @@ pub mod exports {
                         (export_name =
                         "ntwk:theater/message-server-client#handle-channel-open")] unsafe
                         extern "C" fn export_handle_channel_open(arg0 : i32, arg1 : * mut
-                        u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,) -> * mut u8 {
-                        unsafe { $($path_to_types)*::
+                        u8, arg2 : usize, arg3 : * mut u8, arg4 : usize, arg5 : * mut u8,
+                        arg6 : usize,) -> * mut u8 { unsafe { $($path_to_types)*::
                         _export_handle_channel_open_cabi::<$ty > (arg0, arg1, arg2, arg3,
-                        arg4) } } #[unsafe (export_name =
+                        arg4, arg5, arg6) } } #[unsafe (export_name =
                         "cabi_post_ntwk:theater/message-server-client#handle-channel-open")]
                         unsafe extern "C" fn _post_return_handle_channel_open(arg0 : *
                         mut u8,) { unsafe { $($path_to_types)*::
@@ -1698,7 +1973,6 @@ pub mod exports {
                 #[doc(hidden)]
                 static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
                 use super::super::super::super::_rt;
-                pub type State = super::super::super::super::ntwk::theater::types::State;
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
                 pub unsafe fn _export_init_cabi<T: Guest>(
@@ -1827,9 +2101,9 @@ pub mod exports {
                     /// - The first parameter in the tuple is typically the actor's ID
                     /// - Any error returned will cause the actor to fail to start
                     fn init(
-                        state: State,
+                        state: Option<_rt::Vec<u8>>,
                         params: (_rt::String,),
-                    ) -> Result<(State,), _rt::String>;
+                    ) -> Result<(Option<_rt::Vec<u8>>,), _rt::String>;
                 }
                 #[doc(hidden)]
                 macro_rules! __export_ntwk_theater_actor_cabi {
@@ -1864,8 +2138,8 @@ pub mod exports {
 #[rustfmt::skip]
 mod _rt {
     #![allow(dead_code, clippy::all)]
-    pub use alloc_crate::vec::Vec;
     pub use alloc_crate::string::String;
+    pub use alloc_crate::vec::Vec;
     pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
         if cfg!(debug_assertions) {
             String::from_utf8(bytes).unwrap()
@@ -1888,6 +2162,17 @@ mod _rt {
         alloc::dealloc(ptr, layout);
     }
     pub use alloc_crate::alloc;
+    pub unsafe fn bool_lift(val: u8) -> bool {
+        if cfg!(debug_assertions) {
+            match val {
+                0 => false,
+                1 => true,
+                _ => panic!("invalid bool discriminant"),
+            }
+        } else {
+            val != 0
+        }
+    }
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
@@ -1933,51 +2218,52 @@ pub(crate) use __export_anthropic_proxy_impl as export;
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1863] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xc1\x0d\x01A\x02\x01\
-A\x15\x01B\x19\x01p}\x04\0\x04json\x03\0\0\x01p}\x01k\x02\x04\0\x05state\x03\0\x03\
-\x01s\x04\0\x08actor-id\x03\0\x05\x01s\x04\0\x0achannel-id\x03\0\x07\x01k\x01\x01\
-r\x02\x08accepted\x7f\x07message\x09\x04\0\x0echannel-accept\x03\0\x0a\x01kw\x01\
-r\x03\x0aevent-types\x06parent\x0c\x04data\x01\x04\0\x05event\x03\0\x0d\x01r\x02\
-\x04hashw\x05event\x0e\x04\0\x0ameta-event\x03\0\x0f\x01p\x10\x01r\x01\x06events\
-\x11\x04\0\x05chain\x03\0\x12\x01k\x02\x01r\x05\x04hash\x02\x0bparent-hash\x14\x0a\
-event-types\x04data\x02\x09timestampw\x04\0\x0bchain-event\x03\0\x15\x01q\x09\x11\
-operation-timeout\x01w\0\x0echannel-closed\0\0\x0dshutting-down\0\0\x12function-\
-not-found\x01s\0\x0dtype-mismatch\x01s\0\x08internal\x01\x16\0\x13serialization-\
-error\0\0\x16update-component-error\x01s\0\x06paused\0\0\x04\0\x0bactor-error\x03\
-\0\x17\x03\0\x12ntwk:theater/types\x05\0\x02\x03\0\0\x04json\x02\x03\0\0\x05chai\
-n\x02\x03\0\0\x08actor-id\x01B\x0a\x02\x03\x02\x01\x01\x04\0\x04json\x03\0\0\x02\
-\x03\x02\x01\x02\x04\0\x05chain\x03\0\x02\x02\x03\x02\x01\x03\x04\0\x08actor-id\x03\
-\0\x04\x01@\x01\x03msgs\x01\0\x04\0\x03log\x01\x06\x01@\0\0\x03\x04\0\x09get-cha\
-in\x01\x07\x03\0\x14ntwk:theater/runtime\x05\x04\x01B\x14\x01p}\x04\0\x05bytes\x03\
-\0\0\x01o\x02ss\x01p\x02\x01k\x01\x01r\x04\x06methods\x03uris\x07headers\x03\x04\
-body\x04\x04\0\x0chttp-request\x03\0\x05\x01r\x03\x06status{\x07headers\x03\x04b\
-ody\x04\x04\0\x0dhttp-response\x03\0\x07\x01r\x02\x09cert-paths\x08key-paths\x04\
-\0\x0atls-config\x03\0\x09\x01k{\x01ks\x01k\x0a\x01r\x03\x04port\x0b\x04host\x0c\
-\x0atls-config\x0d\x04\0\x0dserver-config\x03\0\x0e\x01r\x07\x02idw\x04port{\x04\
-hosts\x07running\x7f\x0croutes-county\x10middleware-county\x11websocket-enabled\x7f\
-\x04\0\x0bserver-info\x03\0\x10\x01r\x02\x07proceed\x7f\x07request\x06\x04\0\x11\
-middleware-result\x03\0\x12\x03\0\x17ntwk:theater/http-types\x05\x05\x02\x03\0\x02\
-\x0chttp-request\x02\x03\0\x02\x0dhttp-response\x01B\x07\x02\x03\x02\x01\x06\x04\
-\0\x0chttp-request\x03\0\0\x02\x03\x02\x01\x07\x04\0\x0dhttp-response\x03\0\x02\x01\
-j\x01\x03\x01s\x01@\x01\x03req\x01\0\x04\x04\0\x09send-http\x01\x05\x03\0\x18ntw\
-k:theater/http-client\x05\x08\x02\x03\0\0\x05event\x02\x03\0\0\x0achannel-id\x02\
-\x03\0\0\x0echannel-accept\x01B\x1e\x02\x03\x02\x01\x01\x04\0\x04json\x03\0\0\x02\
-\x03\x02\x01\x09\x04\0\x05event\x03\0\x02\x02\x03\x02\x01\x0a\x04\0\x0achannel-i\
-d\x03\0\x04\x02\x03\x02\x01\x0b\x04\0\x0echannel-accept\x03\0\x06\x01k\x01\x01o\x01\
-\x01\x01o\x01\x08\x01j\x01\x0a\x01s\x01@\x02\x05state\x08\x06params\x09\0\x0b\x04\
-\0\x0bhandle-send\x01\x0c\x01o\x02s\x01\x01o\x02\x08\x0a\x01j\x01\x0e\x01s\x01@\x02\
-\x05state\x08\x06params\x0d\0\x0f\x04\0\x0ehandle-request\x01\x10\x01o\x01\x07\x01\
-o\x02\x08\x11\x01j\x01\x12\x01s\x01@\x02\x05state\x08\x06params\x09\0\x13\x04\0\x13\
-handle-channel-open\x01\x14\x01o\x02\x05\x01\x01@\x02\x05state\x08\x06params\x15\
-\0\x0b\x04\0\x16handle-channel-message\x01\x16\x01o\x01\x05\x01@\x02\x05state\x08\
-\x06params\x17\0\x0b\x04\0\x14handle-channel-close\x01\x18\x04\0\"ntwk:theater/m\
-essage-server-client\x05\x0c\x02\x03\0\0\x05state\x01B\x07\x02\x03\x02\x01\x0d\x04\
-\0\x05state\x03\0\0\x01o\x01s\x01o\x01\x01\x01j\x01\x03\x01s\x01@\x02\x05state\x01\
-\x06params\x02\0\x04\x04\0\x04init\x01\x05\x04\0\x12ntwk:theater/actor\x05\x0e\x04\
-\0\x1cntwk:theater/anthropic-proxy\x04\0\x0b\x15\x01\0\x0fanthropic-proxy\x03\0\0\
-\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bind\
-gen-rust\x060.41.0";
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1941] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x8f\x0e\x01A\x02\x01\
+A\x15\x01B\x16\x01s\x04\0\x08actor-id\x03\0\0\x01s\x04\0\x0achannel-id\x03\0\x02\
+\x01p}\x01k\x04\x01r\x02\x08accepted\x7f\x07message\x05\x04\0\x0echannel-accept\x03\
+\0\x06\x01kw\x01r\x03\x0aevent-types\x06parent\x08\x04data\x04\x04\0\x05event\x03\
+\0\x09\x01r\x02\x04hashw\x05event\x0a\x04\0\x0ameta-event\x03\0\x0b\x01p\x0c\x01\
+r\x01\x06events\x0d\x04\0\x05chain\x03\0\x0e\x01r\x05\x04hash\x04\x0bparent-hash\
+\x05\x0aevent-types\x04data\x04\x09timestampw\x04\0\x0bchain-event\x03\0\x10\x01\
+m\x09\x11operation-timeout\x0echannel-closed\x0dshutting-down\x12function-not-fo\
+und\x0dtype-mismatch\x08internal\x13serialization-error\x16update-component-erro\
+r\x06paused\x04\0\x0ewit-error-type\x03\0\x12\x01r\x02\x0aerror-type\x13\x04data\
+\x05\x04\0\x0fwit-actor-error\x03\0\x14\x03\0\x12ntwk:theater/types\x05\0\x02\x03\
+\0\0\x05chain\x02\x03\0\0\x08actor-id\x01B\x0d\x02\x03\x02\x01\x01\x04\0\x05chai\
+n\x03\0\0\x02\x03\x02\x01\x02\x04\0\x08actor-id\x03\0\x02\x01@\x01\x03msgs\x01\0\
+\x04\0\x03log\x01\x04\x01@\0\0\x01\x04\0\x09get-chain\x01\x05\x01p}\x01k\x06\x01\
+j\0\x01s\x01@\x01\x04data\x07\0\x08\x04\0\x08shutdown\x01\x09\x03\0\x14ntwk:thea\
+ter/runtime\x05\x03\x01B\x14\x01p}\x04\0\x05bytes\x03\0\0\x01o\x02ss\x01p\x02\x01\
+k\x01\x01r\x04\x06methods\x03uris\x07headers\x03\x04body\x04\x04\0\x0chttp-reque\
+st\x03\0\x05\x01r\x03\x06status{\x07headers\x03\x04body\x04\x04\0\x0dhttp-respon\
+se\x03\0\x07\x01r\x02\x09cert-paths\x08key-paths\x04\0\x0atls-config\x03\0\x09\x01\
+k{\x01ks\x01k\x0a\x01r\x03\x04port\x0b\x04host\x0c\x0atls-config\x0d\x04\0\x0dse\
+rver-config\x03\0\x0e\x01r\x07\x02idw\x04port{\x04hosts\x07running\x7f\x0croutes\
+-county\x10middleware-county\x11websocket-enabled\x7f\x04\0\x0bserver-info\x03\0\
+\x10\x01r\x02\x07proceed\x7f\x07request\x06\x04\0\x11middleware-result\x03\0\x12\
+\x03\0\x17ntwk:theater/http-types\x05\x04\x02\x03\0\x02\x0chttp-request\x02\x03\0\
+\x02\x0dhttp-response\x01B\x07\x02\x03\x02\x01\x05\x04\0\x0chttp-request\x03\0\0\
+\x02\x03\x02\x01\x06\x04\0\x0dhttp-response\x03\0\x02\x01j\x01\x03\x01s\x01@\x01\
+\x03req\x01\0\x04\x04\0\x09send-http\x01\x05\x03\0\x18ntwk:theater/http-client\x05\
+\x07\x01B\x09\x01ks\x01@\x01\x04names\0\0\x04\0\x07get-var\x01\x01\x01o\x02ss\x01\
+p\x02\x01@\0\0\x03\x04\0\x09list-vars\x01\x04\x01@\x01\x04names\0\x7f\x04\0\x06e\
+xists\x01\x05\x03\0\x18ntwk:theater/environment\x05\x08\x02\x03\0\0\x05event\x02\
+\x03\0\0\x0achannel-id\x02\x03\0\0\x0echannel-accept\x01B\x1d\x02\x03\x02\x01\x09\
+\x04\0\x05event\x03\0\0\x02\x03\x02\x01\x0a\x04\0\x0achannel-id\x03\0\x02\x02\x03\
+\x02\x01\x0b\x04\0\x0echannel-accept\x03\0\x04\x01p}\x01k\x06\x01o\x01\x06\x01o\x01\
+\x07\x01j\x01\x09\x01s\x01@\x02\x05state\x07\x06params\x08\0\x0a\x04\0\x0bhandle\
+-send\x01\x0b\x01o\x02s\x06\x01o\x02\x07\x09\x01j\x01\x0d\x01s\x01@\x02\x05state\
+\x07\x06params\x0c\0\x0e\x04\0\x0ehandle-request\x01\x0f\x01o\x01\x05\x01o\x02\x07\
+\x10\x01j\x01\x11\x01s\x01@\x02\x05state\x07\x06params\x0c\0\x12\x04\0\x13handle\
+-channel-open\x01\x13\x01o\x02\x03\x06\x01@\x02\x05state\x07\x06params\x14\0\x0a\
+\x04\0\x16handle-channel-message\x01\x15\x01o\x01\x03\x01@\x02\x05state\x07\x06p\
+arams\x16\0\x0a\x04\0\x14handle-channel-close\x01\x17\x04\0\"ntwk:theater/messag\
+e-server-client\x05\x0c\x01B\x07\x01p}\x01k\0\x01o\x01s\x01o\x01\x01\x01j\x01\x03\
+\x01s\x01@\x02\x05state\x01\x06params\x02\0\x04\x04\0\x04init\x01\x05\x04\0\x12n\
+twk:theater/actor\x05\x0d\x04\0\x1cntwk:theater/anthropic-proxy\x04\0\x0b\x15\x01\
+\0\x0fanthropic-proxy\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-com\
+ponent\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

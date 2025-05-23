@@ -5,14 +5,15 @@ mod types;
 
 use crate::bindings::exports::ntwk::theater::actor::Guest;
 use crate::bindings::exports::ntwk::theater::message_server_client::Guest as MessageServerClient;
+use crate::bindings::ntwk::theater::environment::get_var;
 use crate::bindings::ntwk::theater::runtime::log;
 use crate::types::state::{Config, State};
 
+use bindings::ntwk::theater::types::ChannelAccept;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct InitData {
-    anthropic_api_key: String,
     store_id: Option<String>,
     config: Option<Config>,
 }
@@ -40,13 +41,19 @@ impl Guest for Component {
 
         log("Init data parsed successfully");
 
+        let anthropic_api_key = match get_var("ANTHROPIC_API_KEY") {
+            Some(key) => {
+                log("Using ANTHROPIC_API_KEY from environment");
+                key
+            }
+            None => {
+                log("No ANTHROPIC_API_KEY found in environment");
+                return Err("ANTHROPIC_API_KEY is required".to_string());
+            }
+        };
+
         // Initialize state
-        let state = State::new(
-            id,
-            init_data.anthropic_api_key,
-            init_data.store_id,
-            init_data.config,
-        );
+        let state = State::new(id, anthropic_api_key, init_data.store_id, init_data.config);
 
         log("State initialized");
 
@@ -85,33 +92,24 @@ impl MessageServerClient for Component {
     }
 
     fn handle_channel_open(
-        state: Option<bindings::exports::ntwk::theater::message_server_client::Json>,
-        _params: (bindings::exports::ntwk::theater::message_server_client::Json,),
-    ) -> Result<
-        (
-            Option<bindings::exports::ntwk::theater::message_server_client::Json>,
-            (bindings::exports::ntwk::theater::message_server_client::ChannelAccept,),
-        ),
-        String,
-    > {
+        state: Option<Vec<u8>>,
+        _params: (String, Vec<u8>),
+    ) -> Result<(Option<Vec<u8>>, (ChannelAccept,)), String> {
         log("Channel open request received");
 
         Ok((
             state,
-            (
-                bindings::exports::ntwk::theater::message_server_client::ChannelAccept {
-                    accepted: true,
-                    message: None,
-                },
-            ),
+            (ChannelAccept {
+                accepted: true,
+                message: None,
+            },),
         ))
     }
 
     fn handle_channel_close(
-        state: Option<bindings::exports::ntwk::theater::message_server_client::Json>,
+        state: Option<Vec<u8>>,
         params: (String,),
-    ) -> Result<(Option<bindings::exports::ntwk::theater::message_server_client::Json>,), String>
-    {
+    ) -> Result<(Option<Vec<u8>>,), String> {
         let (channel_id,) = params;
         log(&format!("Channel {} closed", channel_id));
 
@@ -119,13 +117,9 @@ impl MessageServerClient for Component {
     }
 
     fn handle_channel_message(
-        state: Option<bindings::exports::ntwk::theater::message_server_client::Json>,
-        params: (
-            String,
-            bindings::exports::ntwk::theater::message_server_client::Json,
-        ),
-    ) -> Result<(Option<bindings::exports::ntwk::theater::message_server_client::Json>,), String>
-    {
+        state: Option<Vec<u8>>,
+        params: (String, Vec<u8>),
+    ) -> Result<(Option<Vec<u8>>,), String> {
         let (channel_id, _message) = params;
         log(&format!("Received message on channel {}", channel_id));
 
