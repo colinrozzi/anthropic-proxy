@@ -1,0 +1,8 @@
+{
+  "store_id": null,
+  "config": {
+    "default_model": "claude-3-7-sonnet-20250219",
+    "max_cache_size": 100,
+    "timeout_ms": 30000
+  }
+}
