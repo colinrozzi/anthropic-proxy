@@ -22,3 +22,10 @@ type = "store"
 type = "http-client"
 
 [handlers.config]
+
+[[handlers]]
+type = "environment"
+
+[handlers.config]
+allowed_vars = ["ANTHROPIC_API_KEY"]
+allow_list_all = false
