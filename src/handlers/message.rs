@@ -1,5 +1,5 @@
 use crate::api::AnthropicClient;
-use crate::bindings::ntwk::theater::runtime::log;
+use crate::bindings::theater::simple::runtime::log;
 use crate::types::state::State;
 use genai_types::{ProxyRequest, ProxyResponse};
 

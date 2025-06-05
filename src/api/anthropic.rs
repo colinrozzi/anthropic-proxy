@@ -1,5 +1,5 @@
-use crate::bindings::ntwk::theater::http_client::{send_http, HttpRequest};
-use crate::bindings::ntwk::theater::runtime::log;
+use crate::bindings::theater::simple::http_client::{send_http, HttpRequest};
+use crate::bindings::theater::simple::runtime::log;
 use crate::types::api::{
     AnthropicCompletionRequest, AnthropicCompletionResponse, AnthropicError, AnthropicModelInfo,
 };
