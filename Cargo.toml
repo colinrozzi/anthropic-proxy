@@ -7,7 +7,7 @@ edition = "2021"
 
 [package.metadata.component]
 package = "colinrozzi:anthropic-proxy"
-target = "colinrozzi-wit:anthropic-proxy/default@0.0.1"
+target = "colinrozzi-wit:anthropic-proxy/default@0.1.0"
 
 [dependencies]
 serde_json = "1.0.138"
