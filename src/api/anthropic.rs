@@ -1,5 +1,6 @@
 use crate::bindings::theater::simple::http_client::{send_http, HttpRequest};
 use crate::bindings::theater::simple::runtime::log;
+use crate::bindings::theater::simple::timing;
 use crate::types::api::{
     AnthropicCompletionRequest, AnthropicCompletionResponse, AnthropicError, AnthropicModelInfo,
 };
@@ -101,6 +102,10 @@ impl AnthropicClient {
         &self,
         request: AnthropicCompletionRequest,
     ) -> Result<AnthropicCompletionResponse, AnthropicError> {
+        // okay what do i want to do here? I want to make it so that if we try to generate a
+        // completion and we get a 429 rate limit error, we should retry after a delay.
+        //
+        // what is an elegant way to do this?
         log("Generating completion with Anthropic API");
 
         // Create the HTTP request
@@ -114,6 +119,48 @@ impl AnthropicClient {
             ],
             body: Some(serde_json::to_vec(&request)?),
         };
+
+        let max_retries = 3;
+        let mut retry_delay = 1000;
+        let mut num_tries = 0;
+
+        while max_retries > num_tries {
+            // Send the request
+            let response = match send_http(&http_request) {
+                Ok(resp) => resp,
+                Err(e) => return Err(AnthropicError::HttpError(e)),
+            };
+
+            // Check status code
+            if response.status == 429 {
+                // Rate limit exceeded, retry after delay
+                num_tries += 1;
+                log(&format!(
+                    "Rate limit exceeded, retrying {}/{}",
+                    num_tries, max_retries
+                ));
+                let _ = timing::sleep(retry_delay as u64);
+                retry_delay *= 2; // Exponential backoff
+                continue;
+            } else if response.status != 200 {
+                let message =
+                    String::from_utf8_lossy(&response.body.unwrap_or_default()).to_string();
+                return Err(AnthropicError::ApiError {
+                    status: response.status,
+                    message,
+                });
+            }
+
+            // Parse the response
+            let body = response
+                .body
+                .ok_or_else(|| AnthropicError::InvalidResponse("No response body".to_string()))?;
+
+            log(&format!("Got response: {}", String::from_utf8_lossy(&body)));
+
+            return serde_json::from_slice(&body)
+                .map_err(|e| AnthropicError::InvalidResponse(e.to_string()));
+        }
 
         // Send the request
         let response = match send_http(&http_request) {
