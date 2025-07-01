@@ -53,7 +53,7 @@ pub fn handle_request(
                 request.model
             ));
 
-            match client.generate_completion(request.into()) {
+            match client.generate_completion(request.into(), &state.config.retry_config) {
                 Ok(completion) => ProxyResponse::Completion {
                     completion: completion.into(),
                 },
