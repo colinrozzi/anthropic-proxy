@@ -4,6 +4,7 @@ use crate::bindings::theater::simple::timing;
 use crate::types::api::{
     AnthropicCompletionRequest, AnthropicCompletionResponse, AnthropicError, AnthropicModelInfo,
 };
+use crate::types::state::RetryConfig;
 
 use serde_json::Value;
 
@@ -29,6 +30,104 @@ impl AnthropicClient {
         }
     }
 
+    /// Check if a status code indicates a retryable error
+    fn is_retryable_error(status: u16) -> bool {
+        match status {
+            429 => true, // Rate limit exceeded
+            502 => true, // Bad gateway
+            503 => true, // Service unavailable
+            504 => true, // Gateway timeout
+            529 => true, // Service overloaded (Anthropic specific)
+            _ => false,
+        }
+    }
+
+    /// Execute an HTTP request with exponential backoff retry logic
+    fn execute_with_retry(
+        &self,
+        request: &HttpRequest,
+        retry_config: &RetryConfig,
+    ) -> Result<crate::bindings::theater::simple::http_client::HttpResponse, AnthropicError> {
+        let start_time = timing::now();
+        let mut current_delay = retry_config.initial_delay_ms;
+        let mut attempt = 0;
+
+        loop {
+            attempt += 1;
+            
+            log(&format!("HTTP request attempt {}/{}", attempt, retry_config.max_retries + 1));
+
+            // Send the request
+            let response = match send_http(request) {
+                Ok(resp) => resp,
+                Err(e) => {
+                    log(&format!("HTTP request failed: {}", e));
+                    if attempt > retry_config.max_retries {
+                        return Err(AnthropicError::HttpError(e));
+                    }
+                    
+                    // Check if we've exceeded the total timeout
+                    let elapsed = timing::now() - start_time;
+                    if elapsed >= retry_config.max_total_timeout_ms as u64 {
+                        log("Total retry timeout exceeded");
+                        return Err(AnthropicError::HttpError(e));
+                    }
+                    
+                    // Wait before retrying
+                    log(&format!("Retrying after {} ms due to HTTP error", current_delay));
+                    let _ = timing::sleep(current_delay as u64);
+                    current_delay = std::cmp::min(
+                        (current_delay as f64 * retry_config.backoff_multiplier) as u32,
+                        retry_config.max_delay_ms
+                    );
+                    continue;
+                }
+            };
+
+            // Check if we got a successful response
+            if response.status == 200 {
+                log(&format!("Request successful on attempt {}", attempt));
+                return Ok(response);
+            }
+
+            // Check if this is a retryable error
+            if !Self::is_retryable_error(response.status) {
+                log(&format!("Non-retryable error: {}", response.status));
+                return Ok(response); // Return the error response to be handled by caller
+            }
+
+            // Check if we've exhausted our retries
+            if attempt > retry_config.max_retries {
+                log(&format!("Max retries ({}) exceeded", retry_config.max_retries));
+                return Ok(response);
+            }
+
+            // Check if we've exceeded the total timeout
+            let elapsed = timing::now() - start_time;
+            if elapsed >= retry_config.max_total_timeout_ms as u64 {
+                log("Total retry timeout exceeded");
+                return Ok(response);
+            }
+
+            // Log the retry attempt
+            let message = String::from_utf8_lossy(&response.body.unwrap_or_default()).to_string();
+            log(&format!(
+                "Retryable error {} on attempt {}: {}",
+                response.status, attempt, message
+            ));
+            log(&format!("Retrying after {} ms", current_delay));
+
+            // Wait before retrying
+            let _ = timing::sleep(current_delay as u64);
+            
+            // Update delay for next attempt (exponential backoff)
+            current_delay = std::cmp::min(
+                (current_delay as f64 * retry_config.backoff_multiplier) as u32,
+                retry_config.max_delay_ms
+            );
+        }
+    }
+
     /// List available models from the Anthropic API
     pub fn list_models(&self) -> Result<Vec<AnthropicModelInfo>, AnthropicError> {
         log("Listing available Anthropic models");
@@ -44,11 +143,16 @@ impl AnthropicClient {
             body: None,
         };
 
-        // Send the request
-        let response = match send_http(&request) {
-            Ok(resp) => resp,
-            Err(e) => return Err(AnthropicError::HttpError(e)),
+        // Use default retry config for model listing (lighter retries)
+        let retry_config = RetryConfig {
+            max_retries: 2,
+            initial_delay_ms: 500,
+            max_delay_ms: 5000,
+            backoff_multiplier: 2.0,
+            max_total_timeout_ms: 15000,
         };
+
+        let response = self.execute_with_retry(&request, &retry_config)?;
 
         // Check status code
         if response.status != 200 {
@@ -97,15 +201,12 @@ impl AnthropicClient {
         Ok(models)
     }
 
-    /// Generate a completion using the Anthropic API
+    /// Generate a completion using the Anthropic API with retry logic
     pub fn generate_completion(
         &self,
         request: AnthropicCompletionRequest,
+        retry_config: &RetryConfig,
     ) -> Result<AnthropicCompletionResponse, AnthropicError> {
-        // okay what do i want to do here? I want to make it so that if we try to generate a
-        // completion and we get a 429 rate limit error, we should retry after a delay.
-        //
-        // what is an elegant way to do this?
         log("Generating completion with Anthropic API");
 
         // Create the HTTP request
@@ -120,53 +221,8 @@ impl AnthropicClient {
             body: Some(serde_json::to_vec(&request)?),
         };
 
-        let max_retries = 3;
-        let mut retry_delay = 1000;
-        let mut num_tries = 0;
-
-        while max_retries > num_tries {
-            // Send the request
-            let response = match send_http(&http_request) {
-                Ok(resp) => resp,
-                Err(e) => return Err(AnthropicError::HttpError(e)),
-            };
-
-            // Check status code
-            if response.status == 429 {
-                // Rate limit exceeded, retry after delay
-                num_tries += 1;
-                log(&format!(
-                    "Rate limit exceeded, retrying {}/{}",
-                    num_tries, max_retries
-                ));
-                let _ = timing::sleep(retry_delay as u64);
-                retry_delay *= 2; // Exponential backoff
-                continue;
-            } else if response.status != 200 {
-                let message =
-                    String::from_utf8_lossy(&response.body.unwrap_or_default()).to_string();
-                return Err(AnthropicError::ApiError {
-                    status: response.status,
-                    message,
-                });
-            }
-
-            // Parse the response
-            let body = response
-                .body
-                .ok_or_else(|| AnthropicError::InvalidResponse("No response body".to_string()))?;
-
-            log(&format!("Got response: {}", String::from_utf8_lossy(&body)));
-
-            return serde_json::from_slice(&body)
-                .map_err(|e| AnthropicError::InvalidResponse(e.to_string()));
-        }
-
-        // Send the request
-        let response = match send_http(&http_request) {
-            Ok(resp) => resp,
-            Err(e) => return Err(AnthropicError::HttpError(e)),
-        };
+        // Execute with retry logic
+        let response = self.execute_with_retry(&http_request, retry_config)?;
 
         // Check status code
         if response.status != 200 {
